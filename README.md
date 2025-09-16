@@ -25,7 +25,7 @@ Chessaroo aims to provide a seamless multiplayer chess experience with real-time
 - **Load Balancing**: Application Load Balancer
 - **Database**: AWS RDS PostgreSQL
 - **Container Registry**: Amazon ECR
-- **Infrastructure as Code**: CloudFormation templates
+- **Infrastructure as Code**: Terraform configuration
 
 ## 🚀 Current Status
 
@@ -33,7 +33,7 @@ Chessaroo aims to provide a seamless multiplayer chess experience with real-time
 - [x] Basic Flask application structure
 - [x] Docker containerization
 - [x] AWS ECS deployment pipeline
-- [x] CloudFormation infrastructure templates
+- [x] Terraform infrastructure configuration
 - [x] CI/CD deployment scripts
 
 **Phase 2: Chess Engine** 🔄 (Next)
@@ -73,7 +73,7 @@ Chessaroo aims to provide a seamless multiplayer chess experience with real-time
 | **Load Balancer** | AWS ALB | Traffic distribution |
 | **Database Hosting** | AWS RDS | Managed PostgreSQL |
 | **Container Registry** | AWS ECR | Docker image storage |
-| **Infrastructure** | CloudFormation | Infrastructure as Code |
+| **Infrastructure** | Terraform | Infrastructure as Code |
 
 ## 🚀 Deployment
 
@@ -85,10 +85,10 @@ Chessaroo aims to provide a seamless multiplayer chess experience with real-time
 ### Quick Deploy
 ```bash
 # Setup AWS infrastructure
-./setup-aws.sh
+./terraform-setup.sh
 
 # Deploy application
-./deploy.sh
+./terraform-deploy.sh
 ```
 
 ### Development
@@ -115,10 +115,14 @@ chessaroo/
 ├── requirements.txt          # Python dependencies
 ├── Dockerfile               # Container configuration
 ├── docker-compose.yml       # Local development setup
-├── aws-infrastructure.yml    # CloudFormation template
-├── setup-aws.sh            # AWS infrastructure setup
-├── deploy.sh               # Deployment automation
-├── ecs-task-definition.json # ECS task configuration
+├── terraform/               # Terraform configuration
+│   ├── main.tf              # Core infrastructure
+│   ├── ecs.tf               # ECS and container resources
+│   ├── variables.tf         # Input variables
+│   └── outputs.tf           # Output values
+├── terraform-setup.sh       # Infrastructure setup
+├── terraform-deploy.sh      # Deployment automation
+├── terraform-destroy.sh     # Infrastructure cleanup
 └── README.md               # This file
 ```
 
