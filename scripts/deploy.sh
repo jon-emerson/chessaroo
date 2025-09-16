@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Terraform ECS Deployment Script
-# Usage: ./terraform-deploy.sh
+# Usage: ./scripts/deploy.sh
 
 set -e
 

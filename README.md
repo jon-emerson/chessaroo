@@ -85,10 +85,10 @@ Chessaroo aims to provide a seamless multiplayer chess experience with real-time
 ### Quick Deploy
 ```bash
 # Setup AWS infrastructure
-./terraform-setup.sh
+./scripts/setup.sh
 
 # Deploy application
-./terraform-deploy.sh
+./scripts/deploy.sh
 ```
 
 ### Development
@@ -120,9 +120,10 @@ chessaroo/
 │   ├── ecs.tf               # ECS and container resources
 │   ├── variables.tf         # Input variables
 │   └── outputs.tf           # Output values
-├── terraform-setup.sh       # Infrastructure setup
-├── terraform-deploy.sh      # Deployment automation
-├── terraform-destroy.sh     # Infrastructure cleanup
+├── scripts/                 # Deployment automation
+│   ├── setup.sh             # Infrastructure setup
+│   ├── deploy.sh            # Application deployment
+│   └── destroy.sh           # Infrastructure cleanup
 └── README.md               # This file
 ```
 
