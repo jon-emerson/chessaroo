@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip install:*)",
+      "Bash(python3 -m pip install:*)",
+      "Bash(python3:*)",
+      "Bash(docker build:*)",
+      "Bash(docker run:*)",
+      "Bash(lsof:*)",
+      "Bash(ps:*)",
+      "Bash(aws:*)",
+      "Bash(brew install:*)",
+      "Bash(watch:*)",
+      "Bash(docker push:*)",
+      "Bash(curl:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
