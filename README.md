@@ -93,8 +93,12 @@ Chessaroo aims to provide a seamless multiplayer chess experience with real-time
 
 ### Development
 ```bash
-# Run locally with Docker
+# Run locally with Docker Compose (recommended)
 docker-compose up
+
+# Or run with direct Docker
+docker build -t chessaroo .
+docker run -p 8000:8000 chessaroo
 
 # Or run Flask directly
 pip install -r requirements.txt
@@ -103,9 +107,10 @@ python app.py
 
 ## 🌐 Live Application
 
-**Current Status**: Hello World deployment
-- **URL**: [Your AWS Load Balancer URL]
-- **Status**: Basic Flask application serving test content
+**Current Status**: Foundation deployment
+- **URL**: http://chessaroo-tf-alb-1489853278.us-west-2.elb.amazonaws.com
+- **Status**: Basic Chessaroo application foundation ready for chess engine development
+- **Note**: To deploy the latest changes, run `./scripts/deploy.sh`
 
 ## 📂 Project Structure
 

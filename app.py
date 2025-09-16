@@ -3,8 +3,8 @@ from flask import Flask
 app = Flask(__name__)
 
 @app.route('/')
-def hello_world():
-    return '<h1>Hello, World!</h1>'
+def index():
+    return '<h1>Chessaroo</h1><p>Multiplayer chess application coming soon!</p>'
 
 if __name__ == '__main__':
     import os
