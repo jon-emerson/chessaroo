@@ -54,6 +54,33 @@ export default function GamePage() {
     return () => window.removeEventListener('resize', updateBoardWidth);
   }, []);
 
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      switch (event.key) {
+        case 'ArrowLeft':
+          event.preventDefault();
+          goToPreviousMove();
+          break;
+        case 'ArrowRight':
+          event.preventDefault();
+          goToNextMove();
+          break;
+        case 'Home':
+          event.preventDefault();
+          goToStart();
+          break;
+        case 'End':
+          event.preventDefault();
+          goToEnd();
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentMoveIndex, gameData]); // Dependencies to ensure functions have latest state
+
   const fetchGameData = async () => {
     try {
       const data: GameData = await apiCall(`/api/game/${gameId}/moves`);
