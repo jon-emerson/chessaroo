@@ -26,7 +26,7 @@ interface GameData {
 export default function GamePage() {
   const params = useParams();
   const router = useRouter();
-  const gameId = params.id as string;
+  const gameId = params._id as string;
 
   const [gameData, setGameData] = useState<GameData | null>(null);
   const [loading, setLoading] = useState(true);
