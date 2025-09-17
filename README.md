@@ -36,17 +36,19 @@ Chessaroo aims to provide a seamless multiplayer chess experience with real-time
 - [x] Terraform infrastructure configuration
 - [x] CI/CD deployment scripts
 
-**Phase 2: Chess Engine** 🔄 (Next)
-- [ ] Chess game logic implementation
-- [ ] Move validation and game rules
-- [ ] Game state management
-- [ ] Basic single-player interface
+**Phase 2: Chess Engine** ✅
+- [x] Chess game logic implementation (using python-chess)
+- [x] Move validation and game rules
+- [x] Game state management with FEN notation
+- [x] Interactive chess board interface
+- [x] Move history display and navigation
 
-**Phase 3: Database Integration** 📋 (Planned)
-- [ ] PostgreSQL database setup on AWS RDS
-- [ ] Game persistence models
+**Phase 3: Database Integration** ✅
+- [x] PostgreSQL database setup on AWS RDS
+- [x] Game persistence models (games and moves tables)
+- [x] Algebraic notation storage
+- [x] Game history and move reconstruction
 - [ ] User authentication system
-- [ ] Game history and statistics
 
 **Phase 4: Real-time Multiplayer** 📋 (Planned)
 - [ ] Yjs integration for CRDT-based synchronization
@@ -64,8 +66,8 @@ Chessaroo aims to provide a seamless multiplayer chess experience with real-time
 
 | Component | Technology | Purpose |
 |-----------|------------|---------|
-| **Frontend** | HTML/CSS/JavaScript + Yjs | User interface and real-time sync |
-| **Backend** | Flask + Gunicorn | Web API and game logic |
+| **Frontend** | React + Next.js + TypeScript | Modern interactive chess interface |
+| **Backend** | Flask + Gunicorn | RESTful API and game logic |
 | **Database** | PostgreSQL | Data persistence |
 | **CRDT Library** | Yjs | Conflict-free replication |
 | **Containerization** | Docker | Application packaging |
@@ -93,36 +95,54 @@ Chessaroo aims to provide a seamless multiplayer chess experience with real-time
 
 ### Development
 ```bash
-# Run locally with Docker Compose (recommended)
-docker-compose up
+# Run full stack with Docker Compose (recommended)
+docker-compose -f docker-compose.dev.yml up
 
-# Or run with direct Docker
-docker build -t chessaroo .
-docker run -p 8000:8000 chessaroo
+# Or run separately:
 
-# Or run Flask directly
+# Frontend (React/Next.js)
+cd frontend
+npm install
+npm run dev  # Runs on http://localhost:3000
+
+# Backend (Flask API)
 pip install -r requirements.txt
-python app.py
+python app.py  # Runs on http://localhost:8000
 ```
 
 ## 🌐 Live Application
 
-**Current Status**: Foundation deployment
-- **URL**: http://chessaroo-tf-alb-1489853278.us-west-2.elb.amazonaws.com
-- **Status**: Basic Chessaroo application foundation ready for chess engine development
+**Current Status**: Modern React chess application
+- **URL**: http://chessaroo-tf-alb-1489853278.us-west-2.elb.amazonaws.com (runs on port 3000)
+- **Status**: React + Next.js frontend with Flask API backend and PostgreSQL database
+- **Features**: Modern TypeScript interface, React hooks, interactive chess board, move navigation
 - **Note**: To deploy the latest changes, run `./scripts/deploy.sh`
 
 ## 📂 Project Structure
 
 ```
 chessaroo/
-├── app.py                    # Main Flask application
+├── app.py                    # Flask API backend
+├── models.py                 # Database models (Game, Move)
 ├── requirements.txt          # Python dependencies
-├── Dockerfile               # Container configuration
-├── docker-compose.yml       # Local development setup
+├── Dockerfile               # Production multi-stage container
+├── docker-compose.dev.yml   # Development environment
+├── frontend/                # React + Next.js frontend
+│   ├── src/app/             # Next.js 13+ app directory
+│   │   ├── layout.tsx       # Root layout component
+│   │   ├── page.tsx         # Homepage with game list
+│   │   ├── game/[id]/       # Dynamic game routes
+│   │   │   └── page.tsx     # Game viewer component
+│   │   └── globals.css      # Global styles
+│   ├── package.json         # Frontend dependencies
+│   ├── tsconfig.json        # TypeScript configuration
+│   └── next.config.js       # Next.js configuration
+├── database/                # Database schema and migrations
+│   └── schema.sql           # PostgreSQL schema definition
 ├── terraform/               # Terraform configuration
-│   ├── main.tf              # Core infrastructure
+│   ├── main.tf              # Core infrastructure with VPC
 │   ├── ecs.tf               # ECS and container resources
+│   ├── rds.tf               # PostgreSQL RDS database
 │   ├── variables.tf         # Input variables
 │   └── outputs.tf           # Output values
 ├── scripts/                 # Deployment automation

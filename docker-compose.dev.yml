@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  # Flask API backend
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    ports:
+      - "8000:8000"
+    environment:
+      - FLASK_ENV=development
+      - DATABASE_URL=sqlite:///chessaroo.db
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+
+  # Next.js frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - API_URL=http://backend:8000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+
+  # PostgreSQL database for local development
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: chessaroo
+      POSTGRES_USER: chessaroo_user
+      POSTGRES_PASSWORD: chessaroo_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

@@ -62,6 +62,19 @@ resource "aws_subnet" "public" {
   })
 }
 
+resource "aws_subnet" "private" {
+  count = 2
+
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = cidrsubnet(var.vpc_cidr, 8, count.index + 10)
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+
+  tags = merge(local.common_tags, {
+    Name = "${local.name}-private-subnet-${count.index + 1}"
+    Type = "private"
+  })
+}
+
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
 

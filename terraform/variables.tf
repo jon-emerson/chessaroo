@@ -1,7 +1,7 @@
 variable "project_name" {
   description = "Name of the project"
   type        = string
-  default     = "chessaroo"
+  default     = "chessaroo-tf"
 }
 
 variable "environment" {
@@ -25,7 +25,7 @@ variable "vpc_cidr" {
 variable "container_port" {
   description = "Port exposed by the docker image to redirect traffic to"
   type        = number
-  default     = 8000
+  default     = 3000
 }
 
 variable "ecs_cpu" {
@@ -45,3 +45,4 @@ variable "ecs_desired_count" {
   type        = number
   default     = 2
 }
+

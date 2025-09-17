@@ -48,3 +48,18 @@ terraform.tfstate
 terraform.tfstate.backup
 *.tfplan
 *.tfvars
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+instance/
+
+# Next.js
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/node_modules/
+frontend/.next
+*.tsbuildinfo
+next-env.d.ts

@@ -96,7 +96,15 @@ resource "aws_ecs_task_definition" "app" {
       environment = [
         {
           name  = "PORT"
-          value = tostring(var.container_port)
+          value = "3000"
+        },
+        {
+          name  = "FLASK_ENV"
+          value = "production"
+        },
+        {
+          name  = "API_URL"
+          value = "http://localhost:8000"
         }
       ]
 
