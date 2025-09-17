@@ -46,3 +46,46 @@ variable "ecs_desired_count" {
   default     = 2
 }
 
+# Database variables
+variable "db_name" {
+  description = "Name of the PostgreSQL database"
+  type        = string
+  default     = "chessaroo"
+}
+
+variable "db_username" {
+  description = "Username for the PostgreSQL database"
+  type        = string
+  default     = "chessaroo_user"
+}
+
+variable "db_instance_class" {
+  description = "RDS instance class"
+  type        = string
+  default     = "db.t3.micro"
+}
+
+variable "db_allocated_storage" {
+  description = "Allocated storage for RDS instance (GB)"
+  type        = number
+  default     = 20
+}
+
+variable "db_max_allocated_storage" {
+  description = "Maximum allocated storage for RDS instance (GB)"
+  type        = number
+  default     = 100
+}
+
+variable "db_engine_version" {
+  description = "PostgreSQL engine version"
+  type        = string
+  default     = "16.4"
+}
+
+variable "db_backup_retention_period" {
+  description = "Number of days to retain database backups"
+  type        = number
+  default     = 7
+}
+

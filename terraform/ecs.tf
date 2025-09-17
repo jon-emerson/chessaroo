@@ -57,6 +57,27 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
+# IAM policy for reading secrets from Secrets Manager
+resource "aws_iam_role_policy" "ecs_secrets_policy" {
+  name = "${local.name}-ecs-secrets-policy"
+  role = aws_iam_role.ecs_task_execution.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "secretsmanager:GetSecretValue"
+        ]
+        Resource = [
+          aws_secretsmanager_secret.db_credentials.arn
+        ]
+      }
+    ]
+  })
+}
+
 # CloudWatch Log Group
 resource "aws_cloudwatch_log_group" "app" {
   name              = "/ecs/${local.name}"
@@ -105,6 +126,13 @@ resource "aws_ecs_task_definition" "app" {
         {
           name  = "API_URL"
           value = "http://localhost:8000"
+        }
+      ]
+
+      secrets = [
+        {
+          name      = "DATABASE_URL"
+          valueFrom = "${aws_secretsmanager_secret.db_credentials.arn}:DATABASE_URL::"
         }
       ]
 

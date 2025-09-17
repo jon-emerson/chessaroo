@@ -9,8 +9,19 @@ from io import StringIO
 def create_app():
     app = Flask(__name__)
 
-    # Database configuration - using SQLite
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///chessaroo.db'
+    # Database configuration - using PostgreSQL
+    # Use environment variable for database URL, with fallback for local development
+    database_url = os.environ.get('DATABASE_URL')
+    if not database_url:
+        # Local development fallback
+        db_host = os.environ.get('DB_HOST', 'localhost')
+        db_port = os.environ.get('DB_PORT', '5432')
+        db_name = os.environ.get('DB_NAME', 'chessaroo')
+        db_user = os.environ.get('DB_USER', 'chessaroo_user')
+        db_password = os.environ.get('DB_PASSWORD', 'chessaroo_pass')
+        database_url = f'postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}'
+
+    app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -103,9 +114,51 @@ def create_app():
 
         return jsonify({'gameId': game.id, 'message': 'Sample game created successfully'})
 
-    # Create tables if they don't exist
-    with app.app_context():
+    def init_database():
+        """Initialize database with tables and sample data"""
         db.create_all()
+
+        # Check if we already have games (avoid duplicate sample games)
+        existing_games = Game.query.count()
+        if existing_games == 0:
+            # Create sample game automatically
+            game = Game(
+                title='Sample Chess Game',
+                white_player='Alice',
+                black_player='Bob'
+            )
+            db.session.add(game)
+            db.session.commit()
+
+            # Add sample moves (Scholar's Mate opening)
+            sample_moves = [
+                (1, 'w', 'e4', 'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1'),
+                (1, 'b', 'e5', 'rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e6 0 2'),
+                (2, 'w', 'Bc4', 'rnbqkbnr/pppp1ppp/8/4p3/2B1P3/8/PPPP1PPP/RNBQK1NR b KQkq - 1 2'),
+                (2, 'b', 'Nc6', 'r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/8/PPPP1PPP/RNBQK1NR w KQkq - 2 3'),
+                (3, 'w', 'Qh5', 'r1bqkbnr/pppp1ppp/2n5/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR b KQkq - 3 3'),
+                (3, 'b', 'Nf6', 'r1bqkb1r/pppp1ppp/2n2n2/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 4 4'),
+                (4, 'w', 'Qxf7#', 'r1bqkb1r/pppp1Qpp/2n2n2/4p3/2B1P3/8/PPPP1PPP/RNB1K1NR b KQkq - 0 4')
+            ]
+
+            for move_num, color, notation, fen in sample_moves:
+                move = Move(
+                    game_id=game.id,
+                    move_number=move_num,
+                    color=color,
+                    algebraic_notation=notation,
+                    fen=fen
+                )
+                db.session.add(move)
+
+            game.result = '1-0'  # White wins
+            game.status = 'completed'
+            db.session.commit()
+            print("✅ Sample game created successfully")
+
+    # Initialize database and create sample data
+    with app.app_context():
+        init_database()
 
     return app
 

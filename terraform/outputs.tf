@@ -33,3 +33,24 @@ output "private_subnet_ids" {
   value       = aws_subnet.private[*].id
 }
 
+output "database_endpoint" {
+  description = "RDS instance endpoint"
+  value       = aws_db_instance.postgres.endpoint
+}
+
+output "database_name" {
+  description = "Database name"
+  value       = aws_db_instance.postgres.db_name
+}
+
+output "database_username" {
+  description = "Database username"
+  value       = aws_db_instance.postgres.username
+  sensitive   = true
+}
+
+output "database_secret_arn" {
+  description = "ARN of the database credentials secret"
+  value       = aws_secretsmanager_secret.db_credentials.arn
+}
+
