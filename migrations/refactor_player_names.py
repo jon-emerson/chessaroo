@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-Migration: Refactor player names to user-centric model
+Migration: Complete database reset with user-centric schema
 
 This migration:
-1. Drops the white_player column
-2. Renames black_player to opponent_name
-3. Updates existing data to preserve opponent names based on user_color
+1. Drops all existing tables
+2. Recreates tables with the correct user-centric schema
+3. Creates indexes for performance
 
-It's idempotent and safe to run multiple times.
+It's safe to run multiple times and will reset the database to a clean state.
 """
 import os
 import sys
@@ -15,7 +15,7 @@ import logging
 from sqlalchemy import create_engine, text, MetaData
 
 def run_migration(database_url):
-    """Run the player names refactor migration"""
+    """Run the complete database reset migration"""
     engine = create_engine(database_url)
 
     with engine.connect() as conn:
@@ -23,88 +23,59 @@ def run_migration(database_url):
         trans = conn.begin()
 
         try:
-            print("🔍 Checking if migration has already been applied...")
+            print("🗑️  Dropping all existing tables...")
 
-            # Check if white_player column still exists
-            result = conn.execute(text("""
-                SELECT COUNT(*) FROM information_schema.columns
-                WHERE table_name = 'games' AND column_name = 'white_player'
-            """))
+            # Drop tables in correct order (games first due to foreign key)
+            tables_to_drop = ['games', 'users']
+            for table in tables_to_drop:
+                try:
+                    conn.execute(text(f"DROP TABLE IF EXISTS {table} CASCADE"))
+                    print(f"   ✓ Dropped {table} table")
+                except Exception as e:
+                    print(f"   ⚠️  Note: {table} table didn't exist or couldn't be dropped: {e}")
 
-            white_player_exists = result.scalar() > 0
-
-            # Check if opponent_name column exists
-            result = conn.execute(text("""
-                SELECT COUNT(*) FROM information_schema.columns
-                WHERE table_name = 'games' AND column_name = 'opponent_name'
-            """))
-
-            opponent_name_exists = result.scalar() > 0
-
-            if not white_player_exists and opponent_name_exists:
-                print("✅ Migration already applied - white_player dropped and opponent_name exists")
-                trans.commit()
-                return True
-
-            if not white_player_exists or not opponent_name_exists:
-                print("❌ Unexpected state - partial migration detected")
-                trans.rollback()
-                return False
-
-            print("➡️  Starting player names refactor...")
-
-            # Step 1: Add opponent_name column
-            print("➕ Adding opponent_name column...")
+            print("📋 Creating users table...")
             conn.execute(text("""
-                ALTER TABLE games
-                ADD COLUMN opponent_name VARCHAR(100)
+                CREATE TABLE users (
+                    user_id VARCHAR(20) PRIMARY KEY,
+                    username VARCHAR(100) NOT NULL UNIQUE,
+                    password_hash VARCHAR(255) NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
             """))
 
-            # Step 2: Migrate data based on user_color
-            print("📋 Migrating existing player data...")
-
-            # For users who played white, opponent is black_player
-            result = conn.execute(text("""
-                UPDATE games
-                SET opponent_name = black_player
-                WHERE user_color = 'w' AND black_player IS NOT NULL
-            """))
-            white_users_updated = result.rowcount
-
-            # For users who played black, opponent is white_player
-            result = conn.execute(text("""
-                UPDATE games
-                SET opponent_name = white_player
-                WHERE user_color = 'b' AND white_player IS NOT NULL
-            """))
-            black_users_updated = result.rowcount
-
-            # For games without user_color, try to preserve black_player as opponent
-            result = conn.execute(text("""
-                UPDATE games
-                SET opponent_name = black_player
-                WHERE user_color IS NULL AND black_player IS NOT NULL
-            """))
-            null_color_updated = result.rowcount
-
-            print(f"✏️  Updated {white_users_updated} games where user played white")
-            print(f"✏️  Updated {black_users_updated} games where user played black")
-            print(f"✏️  Updated {null_color_updated} games with null user_color")
-
-            # Step 3: Drop the old columns
-            print("🗑️  Dropping white_player column...")
+            print("🎮 Creating games table with user-centric schema...")
             conn.execute(text("""
-                ALTER TABLE games DROP COLUMN white_player
+                CREATE TABLE games (
+                    id SERIAL PRIMARY KEY,
+                    user_id VARCHAR(20) REFERENCES users(user_id),
+                    user_color VARCHAR(1) CHECK (user_color IN ('w', 'b')),
+                    title VARCHAR(255) DEFAULT 'Untitled Game',
+                    opponent_name VARCHAR(100),
+                    result VARCHAR(10) DEFAULT '*',
+                    status VARCHAR(20) DEFAULT 'active',
+                    starting_fen TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
             """))
 
-            print("🗑️  Dropping black_player column...")
+            print("📊 Creating indexes for performance...")
             conn.execute(text("""
-                ALTER TABLE games DROP COLUMN black_player
+                CREATE INDEX idx_games_user_id ON games(user_id)
+            """))
+            conn.execute(text("""
+                CREATE INDEX idx_games_status ON games(status)
+            """))
+            conn.execute(text("""
+                CREATE INDEX idx_games_created_at ON games(created_at)
             """))
 
             # Commit transaction
             trans.commit()
-            print("✅ Player names refactor completed successfully!")
+            print("✅ Database reset completed successfully!")
+            print("🎯 All tables recreated with user-centric schema")
             return True
 
         except Exception as e:
