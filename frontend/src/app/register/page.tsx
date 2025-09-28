@@ -77,6 +77,11 @@ export default function RegisterPage() {
                   disabled={isLoading}
                   minLength={3}
                   maxLength={50}
+                  inputMode="text"
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  pattern="^[^@\s]+$"
+                  title="Username cannot contain spaces or @"
                 />
                 <div className="form-text">
                   This is how other users will see you in the app.

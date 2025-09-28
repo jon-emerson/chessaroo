@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useAuth } from '../../contexts/AuthContext';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -19,7 +19,7 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      await login(email, password);
+      await login(username, password);
       router.push('/');
     } catch (err: any) {
       setError(err.message || 'Login failed');
@@ -44,17 +44,23 @@ export default function LoginPage() {
 
             <form onSubmit={handleSubmit}>
               <div className="mb-3">
-                <label htmlFor="email" className="form-label">
-                  Email address
+                <label htmlFor="username" className="form-label">
+                  Username
                 </label>
                 <input
-                  type="email"
+                  type="text"
                   className="form-control"
-                  id="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  id="username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   required
                   disabled={isLoading}
+                  autoComplete="username"
+                  inputMode="text"
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  pattern="^[^@\s]+$"
+                  title="Username cannot contain spaces or @"
                 />
               </div>
 
