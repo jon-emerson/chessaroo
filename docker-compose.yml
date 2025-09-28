@@ -1,7 +1,30 @@
+version: '3.8'
+
 services:
-  web:
+  postgres:
+    image: postgres:15
+    container_name: chessaroo-postgres
+    environment:
+      POSTGRES_DB: chessaroo
+      POSTGRES_USER: chessaroo_user
+      POSTGRES_PASSWORD: chessaroo_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  backend:
     build: .
+    container_name: chessaroo-backend
+    environment:
+      DATABASE_URL: postgresql://chessaroo_user:chessaroo_pass@postgres:5432/chessaroo
+      SECRET_KEY: dev-secret-key-change-in-production
     ports:
       - "8000:8000"
-    environment:
-      - PORT=8000
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
