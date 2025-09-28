@@ -4,43 +4,35 @@ This directory contains database migration scripts for the Chessaroo application
 
 ## Migration System
 
-We've transitioned from manual migrations in `app.py` to a proper migration system for better deployment practices.
+Chessaroo now uses Alembic via Flask-Migrate. Manual one-off scripts are retired in favour of versioned revisions tracked in this directory.
 
-### Available Migrations
+### Current revisions
 
-#### `refactor_player_names.py`
-**Purpose**: Rebuilds the entire schema to match the latest Flask models (users, games, moves) including the `email` and `last_login` fields.
+- `0993f449f98a_initial_schema.py` — Baseline schema defining `users`, `games`, and `moves` with the constraints used by the Flask models.
 
-**Changes**:
-- Drops `moves`, `games`, and `users`
-- Recreates all tables with current constraints and indexes
-- Enforces unique email addresses and move ordering uniqueness
+### Running migrations
 
-**Destructive**: Yes. All data is removed. Only use this when a clean slate is acceptable.
-
-Run with:
 ```bash
-python3 migrations/refactor_player_names.py $DATABASE_URL
+# Ensure the application dependencies are installed
+export FLASK_APP=app:create_app
+python3 -m flask db upgrade
 ```
 
-#### Legacy incremental migrations
-These scripts remain in the repo for reference but are no longer part of the production deployment flow once the baseline reset has been applied.
+`flask db upgrade` is idempotent and should be executed during every deployment.
 
-- `deploy_user_games.py`
-- `deploy_user_games_phase2.py`
-- `add_user_color.py`
+> **First-time adoption:** if the target database already contains the tables from a pre-Alembic deploy, stamp it before the first upgrade so Alembic records the baseline without recreating tables:
+> ```bash
+> export FLASK_APP=app:create_app
+> python3 -m flask db stamp 0993f449f98a
+> ```
 
-### Usage
+### Creating new migrations
 
-1. Run `refactor_player_names.py` against the target database to align the schema with the latest application code.
-2. Deploy the application image (no additional ad-hoc SQL is required at container start-up).
-3. For future changes, create new migration scripts that build on this baseline.
+1. Make model changes in `models.py`.
+2. Generate a revision: `python3 -m flask db migrate -m "short description"`
+3. Review / edit the auto-generated file under `migrations/versions/`.
+4. Apply locally with `python3 -m flask db upgrade` before deploying.
 
-### Future Migrations
+### Legacy scripts
 
-For new migrations, follow this pattern:
-1. Create a new script in `migrations/`
-2. Make it idempotent when practical (or clearly mark destructive scripts)
-3. Use transactions for safety
-4. Test locally first
-5. Document the new script in this README
+The ad-hoc scripts (`deploy_user_games.py`, `deploy_user_games_phase2.py`, `add_user_color.py`) are kept only as historical references and should not be run in production. They will be removed once any live environments depending on them have been migrated to the Alembic baseline.

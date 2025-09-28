@@ -3,11 +3,15 @@ import logging
 import sys
 from flask import Flask, jsonify, abort, request, session
 from flask_cors import CORS
+from flask_migrate import Migrate
 from models import db, Game, Move, User
 import chess
 import chess.pgn
 from io import StringIO
 from functools import wraps
+
+
+migrate = Migrate()
 
 def create_app():
     app = Flask(__name__)
@@ -73,6 +77,7 @@ def create_app():
 
     # Initialize database
     db.init_app(app)
+    migrate.init_app(app, db)
 
     # Enable CORS for React frontend
     CORS(app, supports_credentials=True)
@@ -376,69 +381,67 @@ def create_app():
 
         return jsonify({'gameId': game.id, 'message': 'Sample game created successfully'})
 
-    # Note: Database migrations are now handled by migrations/deploy_user_games.py
-    # This should be run separately during deployment
+    # Database migrations are managed via Alembic/Flask-Migrate (use `flask db upgrade`)
 
-    def init_database():
-        """Initialize database with tables and sample data"""
+    @app.cli.command('seed-sample-data')
+    def seed_sample_data() -> None:
+        """Populate the database with a demo user and sample game (development use only)."""
         try:
-            app.logger.info("Database: Creating tables...")
-            db.create_all()
-            app.logger.info("Database: Tables created successfully")
+            if User.query.count() == 0:
+                sample_user = User(
+                    username='testuser',
+                    email='testuser@example.com',
+                    password='testpass123'
+                )
+                db.session.add(sample_user)
+                db.session.commit()
+                app.logger.info("Seed: Created sample user %s", sample_user.user_id)
+            else:
+                sample_user = User.query.first()
+                if not sample_user:
+                    app.logger.error("Seed: No user records available after lookup")
+                    raise SystemExit(1)
 
-            # Check if we already have games (avoid duplicate sample games)
-            existing_games = Game.query.count()
-            app.logger.info(f"Database: Found {existing_games} existing games")
-            if existing_games == 0:
-                # Only create sample game if there are users (since games now require user_id)
-                user_count = User.query.count()
-                if user_count > 0:
-                    first_user = User.query.first()
-                    app.logger.info("Database: Creating sample game...")
-                    game = Game(
-                        title='Sample Chess Game',
-                        opponent_name='Claire',
-                        user_id=first_user.user_id,
-                        user_color='w',
-                        starting_fen='rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
-                    )
-                    db.session.add(game)
-                    db.session.commit()
+            if Game.query.count() == 0:
+                game = Game(
+                    title='Sample Chess Game',
+                    opponent_name='Claire',
+                    user_id=sample_user.user_id,
+                    user_color='w',
+                    starting_fen='rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+                )
+                db.session.add(game)
+                db.session.commit()
 
-                    # Add sample moves (Scholar's Mate opening)
-                    sample_moves = [
-                        (1, 'w', 'e4', 'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1'),
-                        (1, 'b', 'e5', 'rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e6 0 2'),
-                        (2, 'w', 'Bc4', 'rnbqkbnr/pppp1ppp/8/4p3/2B1P3/8/PPPP1PPP/RNBQK1NR b KQkq - 1 2'),
-                        (2, 'b', 'Nc6', 'r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/8/PPPP1PPP/RNBQK1NR w KQkq - 2 3'),
-                        (3, 'w', 'Qh5', 'r1bqkbnr/pppp1ppp/2n5/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR b KQkq - 3 3'),
-                        (3, 'b', 'Nf6', 'r1bqkb1r/pppp1ppp/2n2n2/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 4 4'),
-                        (4, 'w', 'Qxf7#', 'r1bqkb1r/pppp1Qpp/2n2n2/4p3/2B1P3/8/PPPP1PPP/RNB1K1NR b KQkq - 0 4')
-                    ]
+                sample_moves = [
+                    (1, 'w', 'e4', 'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1'),
+                    (1, 'b', 'e5', 'rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e6 0 2'),
+                    (2, 'w', 'Bc4', 'rnbqkbnr/pppp1ppp/8/4p3/2B1P3/8/PPPP1PPP/RNBQK1NR b KQkq - 1 2'),
+                    (2, 'b', 'Nc6', 'r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/8/PPPP1PPP/RNBQK1NR w KQkq - 2 3'),
+                    (3, 'w', 'Qh5', 'r1bqkbnr/pppp1ppp/2n5/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR b KQkq - 3 3'),
+                    (3, 'b', 'Nf6', 'r1bqkb1r/pppp1ppp/2n2n2/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 4 4'),
+                    (4, 'w', 'Qxf7#', 'r1bqkb1r/pppp1Qpp/2n2n2/4p3/2B1P3/8/PPPP1PPP/RNB1K1NR b KQkq - 0 4')
+                ]
 
-                    for move_num, color, notation, fen in sample_moves:
-                        move = Move(
-                            game_id=game.id,
-                            move_number=move_num,
-                            color=color,
-                            algebraic_notation=notation,
-                            fen=fen
-                        )
-                        db.session.add(move)
+                for move_num, color, notation, fen in sample_moves:
+                    db.session.add(Move(
+                        game_id=game.id,
+                        move_number=move_num,
+                        color=color,
+                        algebraic_notation=notation,
+                        fen=fen
+                    ))
 
-                    game.result = '1-0'  # White wins
-                    game.status = 'completed'
-                    db.session.commit()
-                    app.logger.info("Database: Sample game created successfully")
-                else:
-                    app.logger.info("Database: No users found, skipping sample game creation")
-        except Exception as e:
-            app.logger.error(f"Database initialization failed: {str(e)}", exc_info=True)
-            raise
-
-    # Initialize database and create sample data
-    with app.app_context():
-        init_database()
+                game.result = '1-0'
+                game.status = 'completed'
+                db.session.commit()
+                app.logger.info("Seed: Created sample game %s", game.id)
+            else:
+                app.logger.info("Seed: Existing games found, skipping sample game creation")
+        except Exception as exc:
+            db.session.rollback()
+            app.logger.error("Seed command failed: %s", exc, exc_info=True)
+            raise SystemExit(1)
 
     return app
 

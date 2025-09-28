@@ -20,14 +20,9 @@ If ports 3000 or 8000 are busy:
 
 ## Database Migration
 
-**Normal deployments do NOT wipe the database.**
-
-The app automatically creates missing tables on startup without dropping existing data.
-
-For major schema changes requiring a full rebuild (USE WITH EXTREME CAUTION):
-```bash
-export LDFLAGS="-L/opt/homebrew/opt/postgresql@15/lib" && export CPPFLAGS="-I/opt/homebrew/opt/postgresql@15/include" && python3 migrate_database.py
-```
+- Use Alembic migrations managed via Flask-Migrate.
+- Apply migrations with `export FLASK_APP=app:create_app && python3 -m flask db upgrade`.
+- Never run ad-hoc scripts that drop and recreate tables in production.
 
 ## Development Commands
 
@@ -56,4 +51,4 @@ cd frontend && npm run dev
 
 - Last login tracking is implemented in the User model (`models.py:23`) and login endpoint (`app.py:156-159`)
 - Frontend properly handles last login display in Account Settings (`frontend/src/app/settings/page.tsx:102`)
-- Comprehensive database migration script drops and recreates all tables (`migrate_database.py`)
+- Database migrations are versioned under `migrations/versions/`

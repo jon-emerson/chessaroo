@@ -24,7 +24,13 @@ class User(db.Model):
     last_login = db.Column(db.DateTime, nullable=False)
 
     # Relationship to games
-    games = db.relationship('Game', backref='owner', lazy='dynamic', cascade='all, delete-orphan')
+    games = db.relationship(
+        'Game',
+        backref=db.backref('owner', passive_deletes=True),
+        lazy='dynamic',
+        cascade='all, delete-orphan',
+        passive_deletes=True
+    )
 
     def __init__(self, username, email, password, user_id=None):
         self.username = username.strip()
@@ -66,7 +72,12 @@ class Game(db.Model):
     __tablename__ = 'games'
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.String(20), db.ForeignKey('users.user_id'), nullable=False, index=True)
+    user_id = db.Column(
+        db.String(20),
+        db.ForeignKey('users.user_id', ondelete='CASCADE'),
+        nullable=False,
+        index=True
+    )
     user_color = db.Column(db.String(1), nullable=True)  # 'w' or 'b' - which color the user played
     title = db.Column(db.String(255), default='Untitled Game')
     opponent_name = db.Column(db.String(100))  # Name of the opponent player
@@ -76,8 +87,21 @@ class Game(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+    # Additional indexes for common queries
+    __table_args__ = (
+        db.Index('ix_games_status', 'status'),
+        db.Index('ix_games_created_at', 'created_at'),
+        db.CheckConstraint("user_color IN ('w', 'b')", name='ck_games_user_color'),
+    )
+
     # Relationship to moves
-    moves = db.relationship('Move', backref='game', lazy='dynamic', cascade='all, delete-orphan')
+    moves = db.relationship(
+        'Move',
+        backref=db.backref('game', passive_deletes=True),
+        lazy='dynamic',
+        cascade='all, delete-orphan',
+        passive_deletes=True
+    )
 
     def __repr__(self):
         return f'<Game {self.id}: {self.title}>'
@@ -109,7 +133,12 @@ class Move(db.Model):
     __tablename__ = 'moves'
 
     id = db.Column(db.Integer, primary_key=True)
-    game_id = db.Column(db.Integer, db.ForeignKey('games.id'), nullable=False)
+    game_id = db.Column(
+        db.Integer,
+        db.ForeignKey('games.id', ondelete='CASCADE'),
+        nullable=False,
+        index=True
+    )
     move_number = db.Column(db.Integer, nullable=False)
     color = db.Column(db.String(1), nullable=False)  # 'w' or 'b'
     algebraic_notation = db.Column(db.String(10), nullable=False)
@@ -117,7 +146,10 @@ class Move(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Composite unique constraint
-    __table_args__ = (db.UniqueConstraint('game_id', 'move_number', 'color'),)
+    __table_args__ = (
+        db.UniqueConstraint('game_id', 'move_number', 'color', name='uq_moves_game_move_color'),
+        db.CheckConstraint("color IN ('w', 'b')", name='ck_moves_color'),
+    )
 
     def __repr__(self):
         return f'<Move {self.game_id}-{self.move_number}{self.color}: {self.algebraic_notation}>'

@@ -110,6 +110,14 @@ pip install -r requirements.txt
 python app.py  # Runs on http://localhost:8000
 ```
 
+### Database Migrations
+```bash
+export FLASK_APP=app:create_app
+python3 -m flask db upgrade
+```
+
+`flask db upgrade` should be executed for every deploy to ensure the database schema matches the code. Generate new revisions with `python3 -m flask db migrate -m "describe change"` after updating `models.py`.
+
 ## 🌐 Live Application
 
 **Current Status**: Modern React chess application

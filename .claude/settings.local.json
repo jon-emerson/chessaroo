@@ -12,7 +12,12 @@
       "Bash(brew install:*)",
       "Bash(watch:*)",
       "Bash(docker push:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(git push:*)",
+      "Bash(gh auth:*)",
+      "Bash(docker:*)",
+      "Bash(./scripts/deploy.sh:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []
