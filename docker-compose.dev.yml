@@ -1,9 +1,9 @@
 version: '3.8'
 
 services:
-  # PostgreSQL database for local development
-  db:
+  postgres:
     image: postgres:15
+    container_name: chessaroo-postgres-dev
     environment:
       POSTGRES_DB: chessaroo
       POSTGRES_USER: chessaroo_user
@@ -11,47 +11,8 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U chessaroo_user -d chessaroo"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  # Flask API backend
-  backend:
-    build:
-      context: .
-      dockerfile: Dockerfile.backend
-    ports:
-      - "8000:8000"
-    environment:
-      - FLASK_ENV=development
-      - DB_HOST=db
-      - DB_PORT=5432
-      - DB_NAME=chessaroo
-      - DB_USER=chessaroo_user
-      - DB_PASSWORD=chessaroo_pass
-    volumes:
-      - .:/app
-    depends_on:
-      db:
-        condition: service_healthy
-
-  # Next.js frontend
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
-    environment:
-      - API_URL=http://backend:8000
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    depends_on:
-      - backend
+      - postgres_dev_data:/var/lib/postgresql/data
+    restart: unless-stopped
 
 volumes:
-  postgres_data:
+  postgres_dev_data:

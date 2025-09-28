@@ -2,10 +2,63 @@
 Database models for Chessaroo chess application
 """
 import os
+import secrets
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+from werkzeug.security import generate_password_hash, check_password_hash
 
 db = SQLAlchemy()
+
+class User(db.Model):
+    """
+    Model for storing user accounts
+    """
+    __tablename__ = 'users'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.String(20), unique=True, nullable=False)  # Public facing ID
+    username = db.Column(db.String(50), unique=True, nullable=False)  # Display name for other users
+    email = db.Column(db.String(255), unique=True, nullable=False)   # Private, for login
+    password_hash = db.Column(db.String(255), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    last_login = db.Column(db.DateTime)
+    is_active = db.Column(db.Boolean, default=True)
+
+    def __init__(self, email, password, username, user_id=None):
+        self.email = email.lower().strip()
+        self.username = username.strip()
+        self.password_hash = generate_password_hash(password, method='pbkdf2:sha256')
+        self.user_id = user_id or self._generate_user_id()
+
+    def _generate_user_id(self):
+        """Generate a unique public user ID"""
+        while True:
+            # Generate a random alphanumeric ID
+            user_id = secrets.token_hex(4).upper()
+            if not User.query.filter_by(user_id=user_id).first():
+                return user_id
+
+    def check_password(self, password):
+        """Check if provided password matches the stored hash"""
+        return check_password_hash(self.password_hash, password)
+
+    def update_last_login(self):
+        """Update the last login timestamp"""
+        self.last_login = datetime.utcnow()
+        db.session.commit()
+
+    def to_dict(self):
+        """Convert user to dictionary (excluding sensitive info)"""
+        return {
+            'user_id': self.user_id,
+            'username': self.username,
+            'email': self.email,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'last_login': self.last_login.isoformat() if self.last_login else None
+        }
+
+    def __repr__(self):
+        return f'<User {self.user_id}: {self.email}>'
 
 class Game(db.Model):
     """

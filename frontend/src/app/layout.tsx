@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './globals.css';
-import Navigation from '../components/Navigation';
+import { AuthProvider } from '../contexts/AuthContext';
+import ClientLayout from './ClientLayout';
 
 export const metadata: Metadata = {
   title: 'Chessaroo - Multiplayer Chess',
@@ -16,11 +17,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <Navigation />
-
-        <main className="container mt-4">
-          {children}
-        </main>
+        <AuthProvider>
+          <ClientLayout>{children}</ClientLayout>
+        </AuthProvider>
 
         <script
           src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"

@@ -37,14 +37,15 @@ resource "aws_db_subnet_group" "main" {
   })
 }
 
-# Security group for RDS
+# Security group for RDS - ONLY allows access from ECS containers
 resource "aws_security_group" "rds" {
   name        = "${local.name}-rds-sg"
-  description = "Security group for RDS database"
+  description = "Security group for RDS database - restricts access to ECS containers only"
   vpc_id      = aws_vpc.main.id
 
+  # ONLY allow PostgreSQL access from ECS containers - no other sources
   ingress {
-    description     = "PostgreSQL access from ECS containers"
+    description     = "PostgreSQL access from ECS containers ONLY"
     from_port       = 5432
     to_port         = 5432
     protocol        = "tcp"
@@ -82,6 +83,9 @@ resource "aws_db_instance" "postgres" {
 
   vpc_security_group_ids = [aws_security_group.rds.id]
   db_subnet_group_name   = aws_db_subnet_group.main.name
+
+  # Security: Database is private and not publicly accessible
+  publicly_accessible = false
 
   backup_retention_period = var.db_backup_retention_period
   backup_window          = "03:00-04:00"

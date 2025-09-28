@@ -19,6 +19,7 @@ export const apiCall = async (endpoint: string, options?: RequestInit) => {
   const url = `${baseUrl}${endpoint}`;
 
   const response = await fetch(url, {
+    credentials: 'include', // Include cookies for session management
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -27,7 +28,8 @@ export const apiCall = async (endpoint: string, options?: RequestInit) => {
   });
 
   if (!response.ok) {
-    throw new Error(`API call failed: ${response.statusText}`);
+    const errorData = await response.json().catch(() => ({ error: response.statusText }));
+    throw new Error(errorData.error || `API call failed: ${response.statusText}`);
   }
 
   return response.json();
