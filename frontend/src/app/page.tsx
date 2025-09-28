@@ -3,18 +3,20 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { apiCall } from '../lib/api';
+import { useAuth } from '../contexts/AuthContext';
 
 interface Game {
   id: number;
   title: string;
-  white_player: string;
-  black_player: string;
+  user_color: string;
+  opponent_name: string;
   status: string;
   result: string;
   created_at: string;
 }
 
 export default function HomePage() {
+  const { user } = useAuth();
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -74,8 +76,11 @@ export default function HomePage() {
                     <div className="card-body">
                       <h5 className="card-title">{game.title}</h5>
                       <p className="card-text">
-                        <strong>White:</strong> {game.white_player || 'Anonymous'} vs{' '}
-                        <strong>Black:</strong> {game.black_player || 'Anonymous'}
+                        {game.user_color === 'w' ? (
+                          <span><strong>{user?.username} (White)</strong> vs <strong>{game.opponent_name || 'Anonymous'}</strong></span>
+                        ) : (
+                          <span><strong>{game.opponent_name || 'Anonymous'}</strong> vs <strong>{user?.username} (Black)</strong></span>
+                        )}
                       </p>
                       <div className="d-flex justify-content-between align-items-center">
                         <small className="text-muted">

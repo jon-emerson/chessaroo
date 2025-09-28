@@ -31,7 +31,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy backend application
 COPY app.py .
 COPY models.py .
-COPY migrate_db.py .
+COPY migrations/ migrations/
 
 # Install Node.js for serving the frontend
 RUN apt-get update && apt-get install -y nodejs npm && rm -rf /var/lib/apt/lists/*

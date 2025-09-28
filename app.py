@@ -98,13 +98,12 @@ def create_app():
         """Register a new user"""
         try:
             data = request.get_json()
-            email = data.get('email', '').strip().lower()
             password = data.get('password', '')
             username = data.get('username', '').strip()
 
             # Validation
-            if not email or not password or not username:
-                return jsonify({'error': 'Email, password, and username are required'}), 400
+            if not password or not username:
+                return jsonify({'error': 'Password and username are required'}), 400
 
             if len(password) < 6:
                 return jsonify({'error': 'Password must be at least 6 characters long'}), 400
@@ -112,13 +111,8 @@ def create_app():
             if len(username) < 3:
                 return jsonify({'error': 'Username must be at least 3 characters long'}), 400
 
-            if len(username) > 50:
-                return jsonify({'error': 'Username must be 50 characters or less'}), 400
-
-            # Check if email already exists
-            existing_email = User.query.filter_by(email=email).first()
-            if existing_email:
-                return jsonify({'error': 'User with this email already exists'}), 409
+            if len(username) > 100:
+                return jsonify({'error': 'Username must be 100 characters or less'}), 400
 
             # Check if username already exists
             existing_username = User.query.filter_by(username=username).first()
@@ -126,13 +120,12 @@ def create_app():
                 return jsonify({'error': 'Username is already taken'}), 409
 
             # Create new user
-            user = User(email=email, password=password, username=username)
+            user = User(username=username, password=password)
             db.session.add(user)
             db.session.commit()
 
             # Log them in immediately
             session['user_id'] = user.user_id
-            user.update_last_login()
 
             return jsonify({
                 'message': 'User registered successfully',
@@ -141,7 +134,7 @@ def create_app():
 
         except Exception as e:
             db.session.rollback()
-            app.logger.error(f"Registration failed for email {email}: {str(e)}", exc_info=True)
+            app.logger.error(f"Registration failed for username {username}: {str(e)}", exc_info=True)
             return jsonify({'error': 'Registration failed'}), 500
 
     @app.route('/api/auth/login', methods=['POST'])
@@ -149,23 +142,19 @@ def create_app():
         """Authenticate user login"""
         try:
             data = request.get_json()
-            email = data.get('email', '').strip().lower()
+            username = data.get('username', '').strip()
             password = data.get('password', '')
 
-            if not email or not password:
-                return jsonify({'error': 'Email and password are required'}), 400
+            if not username or not password:
+                return jsonify({'error': 'Username and password are required'}), 400
 
-            # Find user by email
-            user = User.query.filter_by(email=email).first()
+            # Find user by username
+            user = User.query.filter_by(username=username).first()
             if not user or not user.check_password(password):
-                return jsonify({'error': 'Invalid email or password'}), 401
-
-            if not user.is_active:
-                return jsonify({'error': 'Account is deactivated'}), 401
+                return jsonify({'error': 'Invalid username or password'}), 401
 
             # Create session
             session['user_id'] = user.user_id
-            user.update_last_login()
 
             return jsonify({
                 'message': 'Login successful',
@@ -173,7 +162,7 @@ def create_app():
             }), 200
 
         except Exception as e:
-            app.logger.error(f"Login failed for email {email}: {str(e)}", exc_info=True)
+            app.logger.error(f"Login failed for username {username}: {str(e)}", exc_info=True)
             return jsonify({'error': 'Login failed'}), 500
 
     @app.route('/api/auth/logout', methods=['POST'])
@@ -282,23 +271,9 @@ def create_app():
         games = Game.query.filter_by(user_id=user.user_id).order_by(Game.created_at.desc()).limit(10).all()
         games_data = []
         for game in games:
-            # Determine player names based on user_color
-            if game.user_color == 'w':
-                white_player = user.username
-                black_player = game.opponent_name
-            elif game.user_color == 'b':
-                white_player = game.opponent_name
-                black_player = user.username
-            else:
-                # Fallback for games without user_color
-                white_player = user.username
-                black_player = game.opponent_name
-
             games_data.append({
                 'id': game.id,
                 'title': game.title,
-                'white_player': white_player,
-                'black_player': black_player,
                 'user_color': game.user_color,
                 'opponent_name': game.opponent_name,
                 'status': game.status,
@@ -329,23 +304,9 @@ def create_app():
                 'fen': move.fen
             })
 
-        # Determine player names based on user_color
-        if game.user_color == 'w':
-            white_player = user.username
-            black_player = game.opponent_name
-        elif game.user_color == 'b':
-            white_player = game.opponent_name
-            black_player = user.username
-        else:
-            # Fallback for games without user_color
-            white_player = user.username
-            black_player = game.opponent_name
-
         return jsonify({
             'gameId': game.id,
             'title': game.title,
-            'whitePlayer': white_player,
-            'blackPlayer': black_player,
             'userColor': game.user_color,
             'opponentName': game.opponent_name,
             'startingFen': game.starting_fen,
@@ -361,11 +322,16 @@ def create_app():
         # Create a new game (user plays as white)
         game = Game(
             title='Sample Chess Game',
-            opponent_name='Bob',
+            opponent_name='Claire',
             user_id=user.user_id,
-            user_color='w'
+            user_color='w',
+            starting_fen='rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
         )
         db.session.add(game)
+        db.session.commit()
+
+        # Update the title to include the game ID
+        game.title = f'Sample Chess Game #{game.id}'
         db.session.commit()
 
         # Add some sample moves (Scholar's Mate opening)
@@ -416,9 +382,10 @@ def create_app():
                     app.logger.info("Database: Creating sample game...")
                     game = Game(
                         title='Sample Chess Game',
-                        opponent_name='Bob',
+                        opponent_name='Claire',
                         user_id=first_user.user_id,
-                        user_color='w'
+                        user_color='w',
+                        starting_fen='rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
                     )
                     db.session.add(game)
                     db.session.commit()

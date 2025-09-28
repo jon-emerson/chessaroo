@@ -16,8 +16,8 @@ interface Move {
 interface GameData {
   gameId: number;
   title: string;
-  whitePlayer: string;
-  blackPlayer: string;
+  userColor: string;
+  opponentName: string;
   startingFen: string;
   currentFen: string;
   moves: Move[];
@@ -89,7 +89,8 @@ export default function GamePage() {
       chess.load(data.startingFen);
       setLoading(false);
     } catch (err) {
-      setError('Failed to load game data');
+      console.error('Error loading game data:', err);
+      setError(`Failed to load game data: ${err instanceof Error ? err.message : 'Unknown error'}`);
       setLoading(false);
     }
   };
@@ -176,10 +177,10 @@ export default function GamePage() {
           <div className="col-md-6">
             <h2>{gameData.title}</h2>
             <p>
-              <strong>White:</strong> {gameData.whitePlayer || 'Anonymous'}
+              <strong>Opponent:</strong> {gameData.opponentName || 'Anonymous'}
             </p>
             <p>
-              <strong>Black:</strong> {gameData.blackPlayer || 'Anonymous'}
+              <strong>Playing as:</strong> {gameData.userColor === 'w' ? 'White' : 'Black'}
             </p>
           </div>
           <div className="col-md-6 text-end">

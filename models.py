@@ -15,20 +15,16 @@ class User(db.Model):
     """
     __tablename__ = 'users'
 
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.String(20), unique=True, nullable=False)  # Public facing ID
-    username = db.Column(db.String(50), unique=True, nullable=False)  # Display name for other users
-    email = db.Column(db.String(255), unique=True, nullable=False)   # Private, for login
+    user_id = db.Column(db.String(20), primary_key=True)  # Public facing ID, now the primary key
+    username = db.Column(db.String(100), unique=True, nullable=False)  # Display name for other users
     password_hash = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    last_login = db.Column(db.DateTime)
-    is_active = db.Column(db.Boolean, default=True)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # Relationship to games
     games = db.relationship('Game', backref='owner', lazy='dynamic', cascade='all, delete-orphan')
 
-    def __init__(self, email, password, username, user_id=None):
-        self.email = email.lower().strip()
+    def __init__(self, username, password, user_id=None):
         self.username = username.strip()
         self.password_hash = generate_password_hash(password, method='pbkdf2:sha256')
         self.user_id = user_id or self._generate_user_id()
@@ -45,23 +41,17 @@ class User(db.Model):
         """Check if provided password matches the stored hash"""
         return check_password_hash(self.password_hash, password)
 
-    def update_last_login(self):
-        """Update the last login timestamp"""
-        self.last_login = datetime.utcnow()
-        db.session.commit()
-
     def to_dict(self):
         """Convert user to dictionary (excluding sensitive info)"""
         return {
             'user_id': self.user_id,
             'username': self.username,
-            'email': self.email,
             'created_at': self.created_at.isoformat() if self.created_at else None,
-            'last_login': self.last_login.isoformat() if self.last_login else None
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
 
     def __repr__(self):
-        return f'<User {self.user_id}: {self.email}>'
+        return f'<User {self.user_id}: {self.username}>'
 
 class Game(db.Model):
     """
@@ -76,7 +66,7 @@ class Game(db.Model):
     opponent_name = db.Column(db.String(100))  # Name of the opponent player
     result = db.Column(db.String(10), default='*')  # 1-0, 0-1, 1/2-1/2, *
     status = db.Column(db.String(20), default='active')  # active, completed, abandoned
-    starting_fen = db.Column(db.String(100), default='rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1')
+    starting_fen = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
