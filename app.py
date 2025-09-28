@@ -153,6 +153,11 @@ def create_app():
             if not user or not user.check_password(password):
                 return jsonify({'error': 'Invalid username or password'}), 401
 
+            # Update last login timestamp
+            from datetime import datetime
+            user.last_login = datetime.utcnow()
+            db.session.commit()
+
             # Create session
             session['user_id'] = user.user_id
 

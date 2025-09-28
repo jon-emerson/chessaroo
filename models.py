@@ -20,6 +20,7 @@ class User(db.Model):
     password_hash = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    last_login = db.Column(db.DateTime, nullable=False)
 
     # Relationship to games
     games = db.relationship('Game', backref='owner', lazy='dynamic', cascade='all, delete-orphan')
@@ -28,6 +29,7 @@ class User(db.Model):
         self.username = username.strip()
         self.password_hash = generate_password_hash(password, method='pbkdf2:sha256')
         self.user_id = user_id or self._generate_user_id()
+        self.last_login = datetime.utcnow()
 
     def _generate_user_id(self):
         """Generate a unique public user ID"""
@@ -47,7 +49,8 @@ class User(db.Model):
             'user_id': self.user_id,
             'username': self.username,
             'created_at': self.created_at.isoformat() if self.created_at else None,
-            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
+            'last_login': self.last_login.isoformat() if self.last_login else None
         }
 
     def __repr__(self):
