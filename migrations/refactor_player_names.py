@@ -3,16 +3,16 @@
 Migration: Complete database reset with user-centric schema
 
 This migration:
-1. Drops all existing tables
-2. Recreates tables with the correct user-centric schema
-3. Creates indexes for performance
+1. Drops all existing tables (users, games, moves)
+2. Recreates tables with the current user-centric schema including email + last_login
+3. Restores supporting indexes and constraints for performance/integrity
 
 It's safe to run multiple times and will reset the database to a clean state.
 """
 import os
 import sys
 import logging
-from sqlalchemy import create_engine, text, MetaData
+from sqlalchemy import create_engine, text
 
 def run_migration(database_url):
     """Run the complete database reset migration"""
@@ -25,8 +25,8 @@ def run_migration(database_url):
         try:
             print("🗑️  Dropping all existing tables...")
 
-            # Drop tables in correct order (games first due to foreign key)
-            tables_to_drop = ['games', 'users']
+            # Drop tables in correct order (child tables first due to foreign keys)
+            tables_to_drop = ['moves', 'games', 'users']
             for table in tables_to_drop:
                 try:
                     conn.execute(text(f"DROP TABLE IF EXISTS {table} CASCADE"))
@@ -39,9 +39,11 @@ def run_migration(database_url):
                 CREATE TABLE users (
                     user_id VARCHAR(20) PRIMARY KEY,
                     username VARCHAR(100) NOT NULL UNIQUE,
+                    email VARCHAR(255) NOT NULL UNIQUE,
                     password_hash VARCHAR(255) NOT NULL,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    last_login TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
                 )
             """))
 
@@ -49,7 +51,7 @@ def run_migration(database_url):
             conn.execute(text("""
                 CREATE TABLE games (
                     id SERIAL PRIMARY KEY,
-                    user_id VARCHAR(20) REFERENCES users(user_id),
+                    user_id VARCHAR(20) NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
                     user_color VARCHAR(1) CHECK (user_color IN ('w', 'b')),
                     title VARCHAR(255) DEFAULT 'Untitled Game',
                     opponent_name VARCHAR(100),
@@ -70,6 +72,25 @@ def run_migration(database_url):
             """))
             conn.execute(text("""
                 CREATE INDEX idx_games_created_at ON games(created_at)
+            """))
+
+            print("♟️  Creating moves table...")
+            conn.execute(text("""
+                CREATE TABLE moves (
+                    id SERIAL PRIMARY KEY,
+                    game_id INTEGER NOT NULL REFERENCES games(id) ON DELETE CASCADE,
+                    move_number INTEGER NOT NULL,
+                    color VARCHAR(1) NOT NULL CHECK (color IN ('w', 'b')),
+                    algebraic_notation VARCHAR(10) NOT NULL,
+                    fen VARCHAR(100) NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE (game_id, move_number, color)
+                )
+            """))
+
+            print("📊 Creating indexes for moves...")
+            conn.execute(text("""
+                CREATE INDEX idx_moves_game_id ON moves(game_id)
             """))
 
             # Commit transaction

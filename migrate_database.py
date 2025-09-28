@@ -106,7 +106,11 @@ def create_sample_data():
         logging.info("🌱 Creating sample data...")
 
         # Create a sample user
-        sample_user = User(username='testuser', password='testpass123')
+        sample_user = User(
+            username='testuser',
+            email='testuser@example.com',
+            password='testpass123'
+        )
         db.session.add(sample_user)
         db.session.commit()
 

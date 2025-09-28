@@ -100,10 +100,11 @@ def create_app():
             data = request.get_json()
             password = data.get('password', '')
             username = data.get('username', '').strip()
+            email = data.get('email', '').strip().lower()
 
             # Validation
-            if not password or not username:
-                return jsonify({'error': 'Password and username are required'}), 400
+            if not password or not username or not email:
+                return jsonify({'error': 'Password, username, and email are required'}), 400
 
             if len(password) < 6:
                 return jsonify({'error': 'Password must be at least 6 characters long'}), 400
@@ -114,13 +115,22 @@ def create_app():
             if len(username) > 100:
                 return jsonify({'error': 'Username must be 100 characters or less'}), 400
 
+            # Basic email validation
+            if '@' not in email or '.' not in email.split('@')[-1]:
+                return jsonify({'error': 'Please enter a valid email address'}), 400
+
             # Check if username already exists
             existing_username = User.query.filter_by(username=username).first()
             if existing_username:
                 return jsonify({'error': 'Username is already taken'}), 409
 
+            # Check if email already exists
+            existing_email = User.query.filter_by(email=email).first()
+            if existing_email:
+                return jsonify({'error': 'Email is already registered'}), 409
+
             # Create new user
-            user = User(username=username, password=password)
+            user = User(username=username, email=email, password=password)
             db.session.add(user)
             db.session.commit()
 

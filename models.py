@@ -17,6 +17,7 @@ class User(db.Model):
 
     user_id = db.Column(db.String(20), primary_key=True)  # Public facing ID, now the primary key
     username = db.Column(db.String(100), unique=True, nullable=False)  # Display name for other users
+    email = db.Column(db.String(255), unique=True, nullable=False)  # Email for login and communication
     password_hash = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -25,8 +26,9 @@ class User(db.Model):
     # Relationship to games
     games = db.relationship('Game', backref='owner', lazy='dynamic', cascade='all, delete-orphan')
 
-    def __init__(self, username, password, user_id=None):
+    def __init__(self, username, email, password, user_id=None):
         self.username = username.strip()
+        self.email = email.strip().lower()
         self.password_hash = generate_password_hash(password, method='pbkdf2:sha256')
         self.user_id = user_id or self._generate_user_id()
         self.last_login = datetime.utcnow()
@@ -48,6 +50,7 @@ class User(db.Model):
         return {
             'user_id': self.user_id,
             'username': self.username,
+            'email': self.email,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None,
             'last_login': self.last_login.isoformat() if self.last_login else None
@@ -63,7 +66,7 @@ class Game(db.Model):
     __tablename__ = 'games'
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.String(20), db.ForeignKey('users.user_id'), nullable=True, index=True)
+    user_id = db.Column(db.String(20), db.ForeignKey('users.user_id'), nullable=False, index=True)
     user_color = db.Column(db.String(1), nullable=True)  # 'w' or 'b' - which color the user played
     title = db.Column(db.String(255), default='Untitled Game')
     opponent_name = db.Column(db.String(100))  # Name of the opponent player

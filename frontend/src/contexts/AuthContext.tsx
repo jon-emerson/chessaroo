@@ -46,7 +46,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const response = await apiCall('/api/auth/login', {
       method: 'POST',
       credentials: 'include',
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ username: email, password }),
     });
     setUser(response.user);
   };
