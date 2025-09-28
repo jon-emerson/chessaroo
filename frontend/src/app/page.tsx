@@ -40,8 +40,8 @@ export default function HomePage() {
     try {
       const response = await apiCall('/api/create-sample-game');
       if (response.gameId) {
-        // Refresh the page to show the new game
-        window.location.reload();
+        // Refresh the games list to show the new game
+        await fetchGames();
       }
     } catch (err) {
       alert('Failed to create sample game');

@@ -31,6 +31,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy backend application
 COPY app.py .
 COPY models.py .
+COPY migrate_database.py .
 COPY migrations/ migrations/
 
 # Install Node.js for serving the frontend
