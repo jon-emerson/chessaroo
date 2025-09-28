@@ -24,6 +24,9 @@ class User(db.Model):
     last_login = db.Column(db.DateTime)
     is_active = db.Column(db.Boolean, default=True)
 
+    # Relationship to games
+    games = db.relationship('Game', backref='owner', lazy='dynamic', cascade='all, delete-orphan')
+
     def __init__(self, email, password, username, user_id=None):
         self.email = email.lower().strip()
         self.username = username.strip()
@@ -67,9 +70,10 @@ class Game(db.Model):
     __tablename__ = 'games'
 
     id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.String(20), db.ForeignKey('users.user_id'), nullable=True, index=True)
+    user_color = db.Column(db.String(1), nullable=True)  # 'w' or 'b' - which color the user played
     title = db.Column(db.String(255), default='Untitled Game')
-    white_player = db.Column(db.String(100))
-    black_player = db.Column(db.String(100))
+    opponent_name = db.Column(db.String(100))  # Name of the opponent player
     result = db.Column(db.String(10), default='*')  # 1-0, 0-1, 1/2-1/2, *
     status = db.Column(db.String(20), default='active')  # active, completed, abandoned
     starting_fen = db.Column(db.String(100), default='rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1')

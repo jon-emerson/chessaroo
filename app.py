@@ -277,15 +277,30 @@ def create_app():
     @app.route('/api/games')
     @login_required
     def list_games():
-        """API endpoint to get list of games"""
-        games = Game.query.order_by(Game.created_at.desc()).limit(10).all()
+        """API endpoint to get list of games for the authenticated user"""
+        user = get_current_user()
+        games = Game.query.filter_by(user_id=user.user_id).order_by(Game.created_at.desc()).limit(10).all()
         games_data = []
         for game in games:
+            # Determine player names based on user_color
+            if game.user_color == 'w':
+                white_player = user.username
+                black_player = game.opponent_name
+            elif game.user_color == 'b':
+                white_player = game.opponent_name
+                black_player = user.username
+            else:
+                # Fallback for games without user_color
+                white_player = user.username
+                black_player = game.opponent_name
+
             games_data.append({
                 'id': game.id,
                 'title': game.title,
-                'white_player': game.white_player,
-                'black_player': game.black_player,
+                'white_player': white_player,
+                'black_player': black_player,
+                'user_color': game.user_color,
+                'opponent_name': game.opponent_name,
                 'status': game.status,
                 'result': game.result,
                 'created_at': game.created_at.isoformat(),
@@ -297,8 +312,12 @@ def create_app():
     @app.route('/api/game/<int:game_id>/moves')
     @login_required
     def get_game_moves(game_id):
-        """API endpoint to get game moves as JSON"""
-        game = Game.query.get_or_404(game_id)
+        """API endpoint to get game moves as JSON for authenticated user's games only"""
+        user = get_current_user()
+        game = Game.query.filter_by(id=game_id, user_id=user.user_id).first()
+        if not game:
+            return jsonify({'error': 'Game not found'}), 404
+
         moves = game.moves.order_by(Move.move_number, Move.color.desc()).all()
 
         moves_data = []
@@ -310,11 +329,25 @@ def create_app():
                 'fen': move.fen
             })
 
+        # Determine player names based on user_color
+        if game.user_color == 'w':
+            white_player = user.username
+            black_player = game.opponent_name
+        elif game.user_color == 'b':
+            white_player = game.opponent_name
+            black_player = user.username
+        else:
+            # Fallback for games without user_color
+            white_player = user.username
+            black_player = game.opponent_name
+
         return jsonify({
             'gameId': game.id,
             'title': game.title,
-            'whitePlayer': game.white_player,
-            'blackPlayer': game.black_player,
+            'whitePlayer': white_player,
+            'blackPlayer': black_player,
+            'userColor': game.user_color,
+            'opponentName': game.opponent_name,
             'startingFen': game.starting_fen,
             'currentFen': game.get_current_fen(),
             'moves': moves_data
@@ -323,12 +356,14 @@ def create_app():
     @app.route('/api/create-sample-game')
     @login_required
     def create_sample_game():
-        """Create a sample game for testing"""
-        # Create a new game
+        """Create a sample game for testing for the authenticated user"""
+        user = get_current_user()
+        # Create a new game (user plays as white)
         game = Game(
             title='Sample Chess Game',
-            white_player='Alice',
-            black_player='Bob'
+            opponent_name='Bob',
+            user_id=user.user_id,
+            user_color='w'
         )
         db.session.add(game)
         db.session.commit()
@@ -360,88 +395,8 @@ def create_app():
 
         return jsonify({'gameId': game.id, 'message': 'Sample game created successfully'})
 
-    def check_and_migrate_schema():
-        """Check for missing columns and add them if needed"""
-        try:
-            from sqlalchemy import text
-            import secrets
-
-            # Check if username column exists
-            result = db.session.execute(text("""
-                SELECT COUNT(*) FROM information_schema.columns
-                WHERE table_name = 'users' AND column_name = 'username'
-            """))
-
-            column_exists = result.scalar() > 0
-
-            if column_exists:
-                app.logger.info("Database: Username column already exists")
-                return
-
-            app.logger.info("Database: Adding missing username column...")
-
-            # Add the username column
-            db.session.execute(text("""
-                ALTER TABLE users
-                ADD COLUMN username VARCHAR(50) UNIQUE
-            """))
-
-            # Get all existing users
-            existing_users = db.session.execute(text("SELECT id, email FROM users")).fetchall()
-
-            app.logger.info(f"Database: Found {len(existing_users)} existing users to update")
-
-            # Generate usernames for existing users
-            for user_row in existing_users:
-                user_id, email = user_row
-
-                # Generate a unique username based on email prefix
-                email_prefix = email.split('@')[0]
-                # Clean and limit the username
-                base_username = ''.join(c for c in email_prefix if c.isalnum())[:20]
-
-                # Ensure uniqueness by adding random suffix if needed
-                username = base_username
-                counter = 1
-                while True:
-                    # Check if username is taken
-                    check_result = db.session.execute(text(
-                        "SELECT COUNT(*) FROM users WHERE username = :username"
-                    ), {"username": username}).scalar()
-
-                    if check_result == 0:
-                        break
-
-                    # Try with a counter
-                    username = f"{base_username}{counter}"
-                    counter += 1
-
-                    # Fallback to random if too many conflicts
-                    if counter > 100:
-                        username = f"{base_username}_{secrets.token_hex(3)}"
-                        break
-
-                # Update the user with the username
-                db.session.execute(text("""
-                    UPDATE users SET username = :username WHERE id = :user_id
-                """), {"username": username, "user_id": user_id})
-
-                app.logger.info(f"Database: Set username '{username}' for user {email}")
-
-            # Make username column NOT NULL after populating it
-            db.session.execute(text("""
-                ALTER TABLE users
-                ALTER COLUMN username SET NOT NULL
-            """))
-
-            db.session.commit()
-            app.logger.info("Database: Username column migration completed successfully")
-
-        except Exception as e:
-            db.session.rollback()
-            app.logger.error(f"Database: Migration failed: {str(e)}", exc_info=True)
-            # Don't raise the exception - let the app continue without the migration
-            # The registration will still fail, but at least we'll have detailed logs
+    # Note: Database migrations are now handled by migrations/deploy_user_games.py
+    # This should be run separately during deployment
 
     def init_database():
         """Initialize database with tables and sample data"""
@@ -450,48 +405,51 @@ def create_app():
             db.create_all()
             app.logger.info("Database: Tables created successfully")
 
-            # Check and add missing columns
-            check_and_migrate_schema()
-
             # Check if we already have games (avoid duplicate sample games)
             existing_games = Game.query.count()
             app.logger.info(f"Database: Found {existing_games} existing games")
             if existing_games == 0:
-                # Create sample game automatically
-                app.logger.info("Database: Creating sample game...")
-                game = Game(
-                    title='Sample Chess Game',
-                    white_player='Alice',
-                    black_player='Bob'
-                )
-                db.session.add(game)
-                db.session.commit()
-
-                # Add sample moves (Scholar's Mate opening)
-                sample_moves = [
-                    (1, 'w', 'e4', 'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1'),
-                    (1, 'b', 'e5', 'rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e6 0 2'),
-                    (2, 'w', 'Bc4', 'rnbqkbnr/pppp1ppp/8/4p3/2B1P3/8/PPPP1PPP/RNBQK1NR b KQkq - 1 2'),
-                    (2, 'b', 'Nc6', 'r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/8/PPPP1PPP/RNBQK1NR w KQkq - 2 3'),
-                    (3, 'w', 'Qh5', 'r1bqkbnr/pppp1ppp/2n5/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR b KQkq - 3 3'),
-                    (3, 'b', 'Nf6', 'r1bqkb1r/pppp1ppp/2n2n2/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 4 4'),
-                    (4, 'w', 'Qxf7#', 'r1bqkb1r/pppp1Qpp/2n2n2/4p3/2B1P3/8/PPPP1PPP/RNB1K1NR b KQkq - 0 4')
-                ]
-
-                for move_num, color, notation, fen in sample_moves:
-                    move = Move(
-                        game_id=game.id,
-                        move_number=move_num,
-                        color=color,
-                        algebraic_notation=notation,
-                        fen=fen
+                # Only create sample game if there are users (since games now require user_id)
+                user_count = User.query.count()
+                if user_count > 0:
+                    first_user = User.query.first()
+                    app.logger.info("Database: Creating sample game...")
+                    game = Game(
+                        title='Sample Chess Game',
+                        opponent_name='Bob',
+                        user_id=first_user.user_id,
+                        user_color='w'
                     )
-                    db.session.add(move)
+                    db.session.add(game)
+                    db.session.commit()
 
-                game.result = '1-0'  # White wins
-                game.status = 'completed'
-                db.session.commit()
-                app.logger.info("Database: Sample game created successfully")
+                    # Add sample moves (Scholar's Mate opening)
+                    sample_moves = [
+                        (1, 'w', 'e4', 'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1'),
+                        (1, 'b', 'e5', 'rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e6 0 2'),
+                        (2, 'w', 'Bc4', 'rnbqkbnr/pppp1ppp/8/4p3/2B1P3/8/PPPP1PPP/RNBQK1NR b KQkq - 1 2'),
+                        (2, 'b', 'Nc6', 'r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/8/PPPP1PPP/RNBQK1NR w KQkq - 2 3'),
+                        (3, 'w', 'Qh5', 'r1bqkbnr/pppp1ppp/2n5/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR b KQkq - 3 3'),
+                        (3, 'b', 'Nf6', 'r1bqkb1r/pppp1ppp/2n2n2/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 4 4'),
+                        (4, 'w', 'Qxf7#', 'r1bqkb1r/pppp1Qpp/2n2n2/4p3/2B1P3/8/PPPP1PPP/RNB1K1NR b KQkq - 0 4')
+                    ]
+
+                    for move_num, color, notation, fen in sample_moves:
+                        move = Move(
+                            game_id=game.id,
+                            move_number=move_num,
+                            color=color,
+                            algebraic_notation=notation,
+                            fen=fen
+                        )
+                        db.session.add(move)
+
+                    game.result = '1-0'  # White wins
+                    game.status = 'completed'
+                    db.session.commit()
+                    app.logger.info("Database: Sample game created successfully")
+                else:
+                    app.logger.info("Database: No users found, skipping sample game creation")
         except Exception as e:
             app.logger.error(f"Database initialization failed: {str(e)}", exc_info=True)
             raise
