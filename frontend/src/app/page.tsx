@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { apiCall } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -16,6 +17,7 @@ interface Game {
 }
 
 export default function HomePage() {
+  const router = useRouter();
   const { user } = useAuth();
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
@@ -40,8 +42,8 @@ export default function HomePage() {
     try {
       const response = await apiCall('/api/create-sample-game');
       if (response.gameId) {
-        // Refresh the games list to show the new game
-        await fetchGames();
+        // Navigate to the new game
+        router.push(`/game/${response.gameId}`);
       }
     } catch (err) {
       alert('Failed to create sample game');
@@ -65,12 +67,12 @@ export default function HomePage() {
         <p className="lead">A multiplayer chess application with real-time collaboration</p>
       </div>
 
-      <div className="col-md-8">
+      <div className="col-12">
         <h2>Recent Games</h2>
         {games.length > 0 ? (
           <div className="row">
             {games.map((game) => (
-              <div key={game.id} className="col-md-6 mb-3">
+              <div key={game.id} className="col-md-4 mb-3">
                 <Link href={`/game/${game.id}`} className="text-decoration-none">
                   <div className="card game-card h-100">
                     <div className="card-body">
@@ -114,28 +116,6 @@ export default function HomePage() {
         )}
       </div>
 
-      <div className="col-md-4">
-        <div className="card">
-          <div className="card-header">
-            <h5>About Chessaroo</h5>
-          </div>
-          <div className="card-body">
-            <p>Chessaroo is a multiplayer chess application built with:</p>
-            <ul>
-              <li>Next.js + React frontend</li>
-              <li>Flask API backend</li>
-              <li>PostgreSQL database</li>
-              <li>Chess.js for game logic</li>
-              <li>React Chessboard for visualization</li>
-              <li>AWS cloud infrastructure</li>
-            </ul>
-            <p>
-              Each game stores moves in standard algebraic notation with full board state
-              (FEN) for perfect game reconstruction.
-            </p>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

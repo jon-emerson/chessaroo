@@ -43,11 +43,8 @@ export default function Navigation() {
               >
                 Create Sample
               </button>
-              <span className="navbar-text me-3">
-                Welcome, {user?.username}
-              </span>
               <Link className="nav-link" href="/settings">
-                Settings
+                {user?.username}
               </Link>
             </>
           ) : (
