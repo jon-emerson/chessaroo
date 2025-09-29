@@ -1,7 +1,11 @@
 import os
 import logging
 import sys
-from flask import Flask, jsonify, abort, request, session
+import hmac
+from datetime import datetime
+from zoneinfo import ZoneInfo
+from flask import Flask, jsonify, request, session
+from dotenv import load_dotenv
 from flask_cors import CORS
 from flask_migrate import Migrate
 from models import db, Game, Move, User
@@ -9,11 +13,37 @@ import chess
 import chess.pgn
 from io import StringIO
 from functools import wraps
+from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
+
+
+load_dotenv()
+load_dotenv('.env.local', override=True)
+
+
+PT_ZONE = ZoneInfo('America/Los_Angeles')
+
+
+def _ensure_container_runtime():
+    """Ensure the backend only runs inside the Docker environment."""
+    if os.environ.get('ALLOW_NON_CONTAINER') == '1':
+        return
+    if os.environ.get('CI'):
+        return
+    if os.path.exists('/.dockerenv') or os.environ.get('RUNNING_IN_CONTAINER') == '1':
+        return
+    raise RuntimeError(
+        'Chessaroo backend detected a non-container environment. Start services via '
+        '`docker compose up` (or set ALLOW_NON_CONTAINER=1 if you intentionally bypass this check).'
+    )
 
 
 migrate = Migrate()
 
+# Set deployment timestamp when server starts (Pacific Time)
+DEPLOYMENT_TIME = datetime.now(tz=PT_ZONE)
+
 def create_app():
+    _ensure_container_runtime()
     app = Flask(__name__)
 
     # Configure logging
@@ -35,7 +65,7 @@ def create_app():
     database_url = os.environ.get('DATABASE_URL')
     if not database_url:
         # Local development fallback
-        db_host = os.environ.get('DB_HOST', 'localhost')
+        db_host = os.environ.get('DB_HOST', '127.0.0.1')
         db_port = os.environ.get('DB_PORT', '5432')
         db_name = os.environ.get('DB_NAME', 'chessaroo')
         db_user = os.environ.get('DB_USER', 'chessaroo_user')
@@ -46,14 +76,11 @@ def create_app():
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     # Configure SQLAlchemy engine for production resilience
-    connect_args = {'connect_timeout': 10}
-
-    # Only require SSL for production (AWS RDS), not for local development
-    if 'amazonaws.com' in database_url:
-        connect_args['sslmode'] = 'require'
-    else:
-        # Local development - disable SSL requirement
-        connect_args['sslmode'] = 'prefer'
+    connect_args = {}
+    if database_url.startswith('postgresql'):
+        connect_args['connect_timeout'] = 10
+        if 'amazonaws.com' in database_url:
+            connect_args['sslmode'] = 'require'
 
     app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
         'pool_pre_ping': True,  # Verify connections before use
@@ -62,6 +89,23 @@ def create_app():
         'max_overflow': 20,     # Max extra connections beyond pool_size
         'connect_args': connect_args
     }
+
+    # Application environment + admin password configuration
+    app_env = os.environ.get('APP_ENV')
+    if not app_env:
+        flask_env = os.environ.get('FLASK_ENV') or app.config.get('ENV')
+        if flask_env:
+            app_env = flask_env
+        elif app.debug:
+            app_env = 'development'
+        else:
+            app_env = 'production'
+
+    app.config['APP_ENV'] = app_env.lower()
+    app.config['ADMIN_MASTER_PASSWORD'] = os.environ.get('ADMIN_MASTER_PASSWORD')
+    app.config['ADMIN_MASTER_PASSWORD_DEV'] = os.environ.get('ADMIN_MASTER_PASSWORD_DEV')
+    app.config.setdefault('ADMIN_SESSION_MAX_AGE', int(os.environ.get('ADMIN_SESSION_MAX_AGE', '3600')))
+    app.config.setdefault('ADMIN_SESSION_COOKIE_NAME', os.environ.get('ADMIN_SESSION_COOKIE_NAME', 'chessaroo_admin_session'))
 
     # Log database configuration (without credentials)
     if database_url:
@@ -90,6 +134,45 @@ def create_app():
                 return jsonify({'error': 'Authentication required'}), 401
             return f(*args, **kwargs)
         return decorated_function
+
+    def get_admin_password():
+        env = app.config.get('APP_ENV', 'production')
+        if env in ('production', 'prod'):
+            return app.config.get('ADMIN_MASTER_PASSWORD')
+        return app.config.get('ADMIN_MASTER_PASSWORD_DEV')
+
+    def get_admin_serializer():
+        secret = app.config['SECRET_KEY']
+        salt = 'chessaroo-admin-cookie'
+        return URLSafeTimedSerializer(secret_key=secret, salt=salt)
+
+    def set_admin_cookie(response):
+        serializer = get_admin_serializer()
+        token = serializer.dumps({'ts': datetime.utcnow().isoformat()})
+        response.set_cookie(
+            app.config['ADMIN_SESSION_COOKIE_NAME'],
+            token,
+            max_age=app.config['ADMIN_SESSION_MAX_AGE'],
+            httponly=True,
+            secure=app.config.get('SESSION_COOKIE_SECURE', False),
+            samesite='Strict',
+        )
+        return response
+
+    def clear_admin_cookie(response):
+        response.delete_cookie(app.config['ADMIN_SESSION_COOKIE_NAME'])
+        return response
+
+    def admin_authenticated():
+        token = request.cookies.get(app.config['ADMIN_SESSION_COOKIE_NAME'])
+        if not token:
+            return False
+        serializer = get_admin_serializer()
+        try:
+            serializer.loads(token, max_age=app.config['ADMIN_SESSION_MAX_AGE'])
+            return True
+        except (BadSignature, SignatureExpired):
+            return False
 
     def get_current_user():
         """Get the current authenticated user"""
@@ -382,6 +465,59 @@ def create_app():
         return jsonify({'gameId': game.id, 'message': 'Sample game created successfully'})
 
     # Database migrations are managed via Alembic/Flask-Migrate (use `flask db upgrade`)
+
+    @app.route('/api/admin/login', methods=['POST'])
+    def admin_login():
+        """Authenticate admin access using master password independent of user auth."""
+        data = request.get_json(silent=True) or {}
+        password = data.get('password', '')
+        master_password = get_admin_password()
+
+        if not master_password:
+            app.logger.error('Admin login attempted without configured master password')
+            return jsonify({'error': 'Admin master password is not configured'}), 500
+
+        if not password:
+            return jsonify({'error': 'Password is required'}), 400
+
+        if not hmac.compare_digest(password, master_password):
+            return jsonify({'error': 'Invalid master password'}), 401
+
+        response = jsonify({'message': 'Admin authentication successful'})
+        return set_admin_cookie(response)
+
+    @app.route('/api/admin/logout', methods=['POST'])
+    def admin_logout():
+        """Clear admin authentication state."""
+        response = jsonify({'message': 'Admin logged out'})
+        return clear_admin_cookie(response)
+
+    @app.route('/api/admin/users', methods=['GET'])
+    def admin_list_users():
+        """Return all users for admin view."""
+        if not admin_authenticated():
+            return jsonify({'error': 'Admin authentication required'}), 401
+        users = User.query.order_by(User.created_at.desc()).all()
+        response = []
+        for user in users:
+            response.append({
+                'user_id': user.user_id,
+                'username': user.username,
+                'email': user.email,
+                'created_at': user.created_at.isoformat() if user.created_at else None,
+                'updated_at': user.updated_at.isoformat() if user.updated_at else None,
+                'last_login': user.last_login.isoformat() if user.last_login else None,
+            })
+        return jsonify({'users': response})
+
+    @app.route('/api/deployment-info', methods=['GET'])
+    def deployment_info():
+        """Return deployment information including server start time."""
+        current_time = datetime.now(tz=PT_ZONE)
+        return jsonify({
+            'deploymentTime': DEPLOYMENT_TIME.isoformat(),
+            'serverTime': current_time.isoformat(),
+        })
 
     @app.cli.command('seed-sample-data')
     def seed_sample_data() -> None:

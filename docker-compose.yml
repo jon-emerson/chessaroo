@@ -20,6 +20,10 @@ services:
     environment:
       DATABASE_URL: postgresql://chessaroo_user:chessaroo_pass@postgres:5432/chessaroo
       SECRET_KEY: dev-secret-key-change-in-production
+      APP_ENV: ${APP_ENV:-development}
+      ADMIN_MASTER_PASSWORD_DEV: ${ADMIN_MASTER_PASSWORD_DEV:?admin dev password required}
+      ADMIN_MASTER_PASSWORD: ${ADMIN_MASTER_PASSWORD:-}
+      RUNNING_IN_CONTAINER: "1"
     ports:
       - "8000:8000"
     depends_on:

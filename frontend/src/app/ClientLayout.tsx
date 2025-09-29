@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import Navigation from '../components/Navigation';
+import Footer from '../components/Footer';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
@@ -10,19 +11,22 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   const pathname = usePathname();
 
   // Public routes that don't require authentication
-  const publicRoutes = ['/login', '/register'];
+  const publicRoutes = ['/login', '/register', '/admin'];
   const isPublicRoute = publicRoutes.includes(pathname);
 
   if (isLoading) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
-        <div className="text-center">
-          <div className="spinner-border" role="status">
-            <span className="visually-hidden">Loading...</span>
+      <>
+        <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
+          <div className="text-center">
+            <div className="spinner-border" role="status">
+              <span className="visually-hidden">Loading...</span>
+            </div>
+            <p className="mt-2">Loading Chessaroo...</p>
           </div>
-          <p className="mt-2">Loading Chessaroo...</p>
         </div>
-      </div>
+        <Footer />
+      </>
     );
   }
 
@@ -53,6 +57,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
             </div>
           </div>
         </main>
+        <Footer />
       </>
     );
   }
@@ -63,6 +68,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       <main className="container mt-4">
         {children}
       </main>
+      <Footer />
     </>
   );
 }

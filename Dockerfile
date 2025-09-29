@@ -1,7 +1,7 @@
 # Production Dockerfile for React + Flask application
 
 # Stage 1: Build React frontend
-FROM node:18-alpine AS frontend-build
+FROM node:18-bullseye-slim AS frontend-build
 
 WORKDIR /frontend
 
@@ -33,8 +33,11 @@ COPY app.py .
 COPY models.py .
 COPY migrations/ migrations/
 
-# Install Node.js for serving the frontend
-RUN apt-get update && apt-get install -y nodejs npm && rm -rf /var/lib/apt/lists/*
+# Copy Node.js runtime from the frontend build stage
+COPY --from=frontend-build /usr/local/bin/node /usr/local/bin/node
+COPY --from=frontend-build /usr/local/bin/npm /usr/local/bin/npm
+COPY --from=frontend-build /usr/local/bin/npx /usr/local/bin/npx
+COPY --from=frontend-build /usr/local/lib/node_modules /usr/local/lib/node_modules
 
 # Copy built React app from frontend stage
 COPY --from=frontend-build /frontend/.next ./frontend/.next

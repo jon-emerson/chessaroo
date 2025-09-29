@@ -95,20 +95,18 @@ Chessaroo aims to provide a seamless multiplayer chess experience with real-time
 
 ### Development
 ```bash
-# Run full stack with Docker Compose (recommended)
-docker-compose -f docker-compose.dev.yml up
+# Build and start the stack (backend + Postgres)
+docker compose up --build
 
-# Or run separately:
+# Run database migrations inside the backend container
+docker compose exec backend flask db upgrade
 
-# Frontend (React/Next.js)
-cd frontend
-npm install
-npm run dev  # Runs on http://localhost:3000
-
-# Backend (Flask API)
-pip install -r requirements.txt
-python app.py  # Runs on http://localhost:8000
+# Tail backend logs
+docker compose logs -f backend
 ```
+
+> The backend exits if it detects a non-container environment. Always use Docker for local work. For rare host-only tasks, export `ALLOW_NON_CONTAINER=1` before running the command (use sparingly).
+> Docker Compose reads environment variables from your shell or a `.env` file in the repo root. Set `ADMIN_MASTER_PASSWORD_DEV` (and `ADMIN_MASTER_PASSWORD` if needed) before running `docker compose up`.
 
 ### Database Migrations
 ```bash
@@ -117,6 +115,15 @@ python3 -m flask db upgrade
 ```
 
 `flask db upgrade` should be executed for every deploy to ensure the database schema matches the code. Generate new revisions with `python3 -m flask db migrate -m "describe change"` after updating `models.py`.
+
+### Admin Dashboard
+- The admin interface lives at `/admin` and authenticates independently of normal user accounts.
+- Configuration is environment-driven:
+  - `APP_ENV` controls which credential is used (`development`, `staging`, or `production`).
+  - Set `ADMIN_MASTER_PASSWORD_DEV` for development/staging and `ADMIN_MASTER_PASSWORD` for production.
+- For local development, copy `.env.example` to `.env.local` (ignored by git), set the passwords, and ensure `APP_ENV=development`.
+- In production, inject secrets via task definition / deployment pipeline (never check them into the repo).
+- Run `python3 -m flask db stamp 0993f449f98a` once in existing environments before the first Alembic upgrade if the tables already exist.
 
 ## 🌐 Live Application
 

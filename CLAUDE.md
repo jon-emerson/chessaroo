@@ -23,17 +23,24 @@ If ports 3000 or 8000 are busy:
 - Use Alembic migrations managed via Flask-Migrate.
 - Apply migrations with `export FLASK_APP=app:create_app && python3 -m flask db upgrade`.
 - Never run ad-hoc scripts that drop and recreate tables in production.
+- Configure admin access via environment variables set outside the repo:
+  - `APP_ENV` (e.g., `development`, `staging`, `production`)
+  - `ADMIN_MASTER_PASSWORD_DEV` (development/staging master password)
+  - `ADMIN_MASTER_PASSWORD` (production master password)
+- Use `.env.local` (ignored by git) for local secrets if needed.
 
 ## Development Commands
 
 ### Start Local Development
-```bash
-# Terminal 1 - Backend
-export LDFLAGS="-L/opt/homebrew/opt/postgresql@15/lib" && export CPPFLAGS="-I/opt/homebrew/opt/postgresql@15/include" && python3 app.py
+All local work should run inside Docker:
 
-# Terminal 2 - Frontend
-cd frontend && npm run dev
+```bash
+docker compose up --build
+docker compose exec backend flask db upgrade
 ```
+
+> The backend aborts if it detects a non-container runtime. To bypass (not recommended), set `ALLOW_NON_CONTAINER=1` for that invocation only.
+> Put required secrets (e.g., `ADMIN_MASTER_PASSWORD_DEV`) in a local `.env` file or export them before starting Compose; Docker will pass them into the container.
 
 ### Deploy to Production
 ```bash
