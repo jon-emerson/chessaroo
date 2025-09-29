@@ -125,6 +125,20 @@ python3 -m flask db upgrade
 - In production, inject secrets via task definition / deployment pipeline (never check them into the repo).
 - Run `python3 -m flask db stamp 0993f449f98a` once in existing environments before the first Alembic upgrade if the tables already exist.
 
+### Continuous Deployment (GitHub Actions)
+Every push to `main` triggers `.github/workflows/deploy.yml`, which builds the Docker image, pushes to ECR, runs migrations, and forces a new ECS deployment. Configure these GitHub repository secrets before enabling the workflow:
+
+| Secret | Description |
+| --- | --- |
+| `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | Credentials for the GitHub Actions deploy user |
+| `AWS_REGION` | AWS region (e.g. `us-west-2`) |
+| `ECR_REPOSITORY_URL` | Full repository URI (`1234567890.dkr.ecr.us-west-2.amazonaws.com/chessaroo-tf`) |
+| `ECS_CLUSTER_NAME` | Name of the ECS cluster |
+| `ECS_SERVICE_NAME` | Name of the ECS service |
+| `LOAD_BALANCER_URL` *(optional)* | Production URL to print after deploy |
+
+The IAM policy and setup helper scripts live under `terraform/policies/`.
+
 ## 🌐 Live Application
 
 **Current Status**: Modern React chess application

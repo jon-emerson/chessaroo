@@ -5,22 +5,33 @@
 
 set -e
 
-# Change to terraform directory for getting outputs
-cd terraform
+# Resolve deployment configuration either from environment or Terraform outputs
+USED_TERRAFORM=false
 
-# Get configuration from Terraform outputs
-echo "🚀 Getting deployment configuration..."
+if [ -n "$ECR_REPOSITORY_URL" ] && [ -n "$ECS_CLUSTER_NAME" ] && [ -n "$ECS_SERVICE_NAME" ]; then
+    echo "🚀 Using deployment configuration from environment variables"
+    ECR_URI="$ECR_REPOSITORY_URL"
+    CLUSTER_NAME="$ECS_CLUSTER_NAME"
+    SERVICE_NAME="$ECS_SERVICE_NAME"
+    ALB_URL=${LOAD_BALANCER_URL:-""}
+else
+    echo "🚀 Getting deployment configuration from Terraform outputs..."
+    cd terraform
+    ECR_URI=$(terraform output -raw ecr_repository_url 2>/dev/null || echo "")
+    CLUSTER_NAME=$(terraform output -raw cluster_name 2>/dev/null || echo "")
+    SERVICE_NAME=$(terraform output -raw service_name 2>/dev/null || echo "")
+    ALB_URL=$(terraform output -raw load_balancer_url 2>/dev/null || echo "")
 
-ECR_URI=$(terraform output -raw ecr_repository_url 2>/dev/null || echo "")
-CLUSTER_NAME=$(terraform output -raw cluster_name 2>/dev/null || echo "")
-SERVICE_NAME=$(terraform output -raw service_name 2>/dev/null || echo "")
+    if [ -z "$ECR_URI" ] || [ -z "$CLUSTER_NAME" ] || [ -z "$SERVICE_NAME" ]; then
+        echo "❌ Deployment configuration not available. Set ECR_REPOSITORY_URL, ECS_CLUSTER_NAME, and ECS_SERVICE_NAME or run terraform first."
+        exit 1
+    fi
 
-if [ -z "$ECR_URI" ] || [ -z "$CLUSTER_NAME" ] || [ -z "$SERVICE_NAME" ]; then
-    echo "❌ Terraform outputs not available. Please run ./terraform-setup.sh first."
-    exit 1
+    cd ..
+    USED_TERRAFORM=true
 fi
 
-AWS_REGION=$(aws configure get region 2>/dev/null || echo "us-west-2")
+AWS_REGION=${AWS_REGION:-$(aws configure get region 2>/dev/null || echo "us-west-2")}
 PROJECT_NAME="chessaroo"
 
 echo "ECR Repository: $ECR_URI"
@@ -28,9 +39,6 @@ echo "ECS Cluster: $CLUSTER_NAME"
 echo "ECS Service: $SERVICE_NAME"
 echo "AWS Region: $AWS_REGION"
 echo ""
-
-# Change back to project root
-cd ..
 
 # Build and tag Docker image
 echo "🐳 Building Docker image..."
@@ -154,9 +162,11 @@ echo "🚀 Deploying to ECS..."
 aws ecs update-service --cluster "$CLUSTER_NAME" --service "$SERVICE_NAME" --force-new-deployment --region "$AWS_REGION"
 aws ecs wait services-stable --cluster "$CLUSTER_NAME" --services "$SERVICE_NAME" --region "$AWS_REGION"
 
-# Get the load balancer URL
-cd terraform
-ALB_URL=$(terraform output -raw load_balancer_url 2>/dev/null || echo "")
+if [ "$USED_TERRAFORM" = true ]; then
+    cd terraform
+    ALB_URL=$(terraform output -raw load_balancer_url 2>/dev/null || echo "")
+    cd ..
+fi
 
 echo ""
 echo "✅ Deployment complete!"
