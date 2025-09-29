@@ -15,7 +15,7 @@
         "ecr:PutImage"
       ],
       "Resource": [
-        "arn:aws:ecr:*:*:repository/your-app-name"
+        "arn:aws:ecr:us-west-2:599704544000:repository/chessaroo-tf"
       ]
     },
     {
@@ -36,8 +36,8 @@
         "ecs:RegisterTaskDefinition"
       ],
       "Resource": [
-        "arn:aws:ecs:*:*:service/your-cluster-name/your-service-name",
-        "arn:aws:ecs:*:*:task-definition/your-task-definition-family:*"
+        "arn:aws:ecs:us-west-2:599704544000:service/chessaroo-tf-cluster/chessaroo-tf-service",
+        "arn:aws:ecs:us-west-2:599704544000:task-definition/chessaroo-tf:*"
       ]
     },
     {
@@ -47,10 +47,8 @@
         "iam:PassRole"
       ],
       "Resource": [
-        "arn:aws:iam::*:role/your-ecs-task-execution-role",
-        "arn:aws:iam::*:role/your-ecs-task-role"
+        "arn:aws:iam::599704544000:role/chessaroo-tf-ecs-task-execution-role"
       ]
     }
   ]
 }
-
