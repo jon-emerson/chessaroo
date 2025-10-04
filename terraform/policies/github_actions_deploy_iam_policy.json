@@ -48,6 +48,14 @@
       "Resource": "*"
     },
     {
+      "Sid": "ECSRunTask",
+      "Effect": "Allow",
+      "Action": [
+        "ecs:RunTask"
+      ],
+      "Resource": "arn:aws:ecs:us-west-2:599704544000:task-definition/chessaroo-tf:*"
+    },
+    {
       "Sid": "IAMPassRolePermission",
       "Effect": "Allow",
       "Action": [

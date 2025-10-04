@@ -45,7 +45,7 @@ COPY --from=frontend-build /frontend/.next/standalone ./frontend
 COPY --from=frontend-build /frontend/.next/static ./frontend/.next/static
 
 # Create startup script
-COPY start-prod.sh .
+COPY scripts/start-prod.sh ./start-prod.sh
 RUN chmod +x start-prod.sh
 
 EXPOSE 8000
