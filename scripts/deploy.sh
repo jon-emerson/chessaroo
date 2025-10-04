@@ -103,7 +103,7 @@ overrides = {
             "name": container_name,
             "command": ["python3", "-m", "flask", "db", "upgrade"],
             "environment": [
-                {"name": "FLASK_APP", "value": "app:create_app"},
+                {"name": "FLASK_APP", "value": "backend.app:create_app"},
                 {"name": "FLASK_RUN_FROM_CLI", "value": "true"}
             ]
         }

@@ -9,7 +9,7 @@
   - URL: http://localhost:3000
 
 - **Backend (Flask)**: Port **8000** ONLY
-  - Command: `export LDFLAGS="-L/opt/homebrew/opt/postgresql@15/lib" && export CPPFLAGS="-I/opt/homebrew/opt/postgresql@15/include" && python3 app.py`
+  - Command: `export LDFLAGS="-L/opt/homebrew/opt/postgresql@15/lib" && export CPPFLAGS="-I/opt/homebrew/opt/postgresql@15/include" && flask --app backend.app run --port 8000`
   - URL: http://localhost:8000
 
 **NEVER use different ports (3001, 8001, etc.)**
@@ -21,7 +21,7 @@ If ports 3000 or 8000 are busy:
 ## Database Migration
 
 - Use Alembic migrations managed via Flask-Migrate.
-- Apply migrations with `export FLASK_APP=app:create_app && python3 -m flask db upgrade`.
+- Apply migrations with `export FLASK_APP=backend.app:create_app && python3 -m flask db upgrade`.
 - Never run ad-hoc scripts that drop and recreate tables in production.
 - Configure admin access via environment variables set outside the repo:
   - `APP_ENV` (e.g., `development`, `staging`, `production`)
@@ -56,6 +56,6 @@ docker compose exec backend flask db upgrade
 
 ## Key Implementation Notes
 
-- Last login tracking is implemented in the User model (`models.py:23`) and login endpoint (`app.py:156-159`)
+- Last login tracking is implemented in the User model (`backend/models.py:23`) and login endpoint (`backend/app.py:156-159`)
 - Frontend properly handles last login display in Account Settings (`frontend/src/app/settings/page.tsx:102`)
 - Database migrations are versioned under `migrations/versions/`

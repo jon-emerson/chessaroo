@@ -29,8 +29,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy backend application
-COPY app.py .
-COPY models.py .
+COPY backend/ backend/
 COPY migrations/ migrations/
 COPY helpers/ helpers/
 
@@ -47,6 +46,8 @@ COPY --from=frontend-build /frontend/.next/static ./frontend/.next/static
 # Create startup script
 COPY scripts/start-prod.sh ./start-prod.sh
 RUN chmod +x start-prod.sh
+
+ENV FLASK_APP=backend.app:create_app
 
 EXPOSE 8000
 

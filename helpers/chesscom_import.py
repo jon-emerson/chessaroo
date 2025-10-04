@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 import requests
 from flask import current_app
 
-from models import db, ImportedGame
+from backend.models import db, ImportedGame
 
 
 class ChessComImportError(Exception):

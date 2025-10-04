@@ -8,7 +8,7 @@ from flask import Flask, jsonify, request, session
 from dotenv import load_dotenv
 from flask_cors import CORS
 from flask_migrate import Migrate
-from models import db, Game, Move, User, ImportedGame
+from .models import db, Game, Move, User, ImportedGame
 import chess
 import chess.pgn
 from io import StringIO

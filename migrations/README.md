@@ -14,7 +14,7 @@ Chessaroo now uses Alembic via Flask-Migrate. Manual one-off scripts are retired
 
 ```bash
 # Ensure the application dependencies are installed
-export FLASK_APP=app:create_app
+export FLASK_APP=backend.app:create_app
 python3 -m flask db upgrade
 ```
 
@@ -22,13 +22,13 @@ python3 -m flask db upgrade
 
 > **First-time adoption:** if the target database already contains the tables from a pre-Alembic deploy, stamp it before the first upgrade so Alembic records the baseline without recreating tables:
 > ```bash
-> export FLASK_APP=app:create_app
+> export FLASK_APP=backend.app:create_app
 > python3 -m flask db stamp 0993f449f98a
 > ```
 
 ### Creating new migrations
 
-1. Make model changes in `models.py`.
+1. Make model changes in `backend/models.py`.
 2. Generate a revision: `python3 -m flask db migrate -m "short description"`
 3. Review / edit the auto-generated file under `migrations/versions/`.
 4. Apply locally with `python3 -m flask db upgrade` before deploying.

@@ -110,11 +110,11 @@ docker compose logs -f backend
 
 ### Database Migrations
 ```bash
-export FLASK_APP=app:create_app
+export FLASK_APP=backend.app:create_app
 python3 -m flask db upgrade
 ```
 
-`flask db upgrade` should be executed for every deploy to ensure the database schema matches the code. Generate new revisions with `python3 -m flask db migrate -m "describe change"` after updating `models.py`.
+`flask db upgrade` should be executed for every deploy to ensure the database schema matches the code. Generate new revisions with `python3 -m flask db migrate -m "describe change"` after updating `backend/models.py`.
 
 ### Admin Dashboard
 - The admin interface lives at `/admin` and authenticates independently of normal user accounts.
@@ -151,11 +151,10 @@ The IAM policy and setup helper scripts live under `terraform/policies/`.
 
 ```
 chessaroo/
-├── app.py                    # Flask API backend
-├── models.py                 # Database models (Game, Move)
-├── requirements.txt          # Python dependencies
-├── Dockerfile               # Production multi-stage container
-├── docker-compose.dev.yml   # Development environment
+├── backend/                 # Flask backend package
+│   ├── __init__.py          # Package marker
+│   ├── app.py               # Flask application factory and routes
+│   └── models.py            # SQLAlchemy models
 ├── frontend/                # React + Next.js frontend
 │   ├── src/app/             # Next.js 13+ app directory
 │   │   ├── layout.tsx       # Root layout component
@@ -166,19 +165,23 @@ chessaroo/
 │   ├── package.json         # Frontend dependencies
 │   ├── tsconfig.json        # TypeScript configuration
 │   └── next.config.js       # Next.js configuration
-├── database/                # Database schema and migrations
-│   └── schema.sql           # PostgreSQL schema definition
+├── helpers/                 # Backend helper modules
+├── migrations/              # Alembic migrations
+├── scripts/                 # Deployment and utility scripts
+│   ├── deploy.sh            # Application deployment
+│   ├── destroy.sh           # Infrastructure cleanup
+│   ├── setup.sh             # Infrastructure provisioning helper
+│   └── start-prod.sh        # Container entrypoint (gunicorn + Next.js)
 ├── terraform/               # Terraform configuration
 │   ├── main.tf              # Core infrastructure with VPC
 │   ├── ecs.tf               # ECS and container resources
 │   ├── rds.tf               # PostgreSQL RDS database
 │   ├── variables.tf         # Input variables
 │   └── outputs.tf           # Output values
-├── scripts/                 # Deployment automation
-│   ├── setup.sh             # Infrastructure setup
-│   ├── deploy.sh            # Application deployment
-│   └── destroy.sh           # Infrastructure cleanup
-└── README.md               # This file
+├── Dockerfile               # Production multi-stage container
+├── docker-compose.yml       # Development stack
+├── requirements.txt         # Python dependencies
+└── README.md                # This file
 ```
 
 ## 🤝 Contributing
