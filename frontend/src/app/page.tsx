@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { apiCall } from '../lib/api';
@@ -22,6 +22,9 @@ export default function HomePage() {
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [importUrl, setImportUrl] = useState('');
+  const [importing, setImporting] = useState(false);
+  const [importStatus, setImportStatus] = useState<string | null>(null);
 
   useEffect(() => {
     fetchGames();
@@ -35,6 +38,38 @@ export default function HomePage() {
     } catch (err) {
       setError('Failed to load games');
       setLoading(false);
+    }
+  };
+
+  const handleImport = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setImportStatus(null);
+
+    if (!importUrl.trim()) {
+      setImportStatus('Please enter a Chess.com game URL.');
+      return;
+    }
+
+    setImporting(true);
+    try {
+      const response = await apiCall('/api/imported-games/chesscom', {
+        method: 'POST',
+        body: JSON.stringify({ url: importUrl.trim() }),
+      });
+
+      setImportUrl('');
+      fetchGames();
+      if (response?.importedGameId) {
+        router.push(`/imported_game/${response.importedGameId}`);
+        return;
+      } else {
+        setImportStatus('Game imported successfully.');
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to import game.';
+      setImportStatus(message);
+    } finally {
+      setImporting(false);
     }
   };
 
@@ -65,6 +100,34 @@ export default function HomePage() {
       <div className="col-12">
         <h1>♕ Welcome to Chessaroo</h1>
         <p className="lead">A multiplayer chess application with real-time collaboration</p>
+      </div>
+
+      <div className="col-12">
+        <div className="card mb-4">
+          <div className="card-body">
+            <h3 className="card-title">Import a Chess.com Game</h3>
+            <p className="card-text">Paste a game link such as https://www.chess.com/game/live/143645010490.</p>
+            <form onSubmit={handleImport} className="row g-2">
+              <div className="col-md-9">
+                <input
+                  type="url"
+                  className="form-control"
+                  placeholder="https://www.chess.com/game/live/123456789"
+                  value={importUrl}
+                  onChange={(event) => setImportUrl(event.target.value)}
+                  disabled={importing}
+                  required
+                />
+              </div>
+              <div className="col-md-3 d-grid">
+                <button type="submit" className="btn btn-success" disabled={importing}>
+                  {importing ? 'Importing…' : 'Import Game'}
+                </button>
+              </div>
+            </form>
+            {importStatus && <div className="mt-2">{importStatus}</div>}
+          </div>
+        </div>
       </div>
 
       <div className="col-12">

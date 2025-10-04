@@ -32,6 +32,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY app.py .
 COPY models.py .
 COPY migrations/ migrations/
+COPY helpers/ helpers/
 
 # Copy Node.js runtime from the frontend build stage
 COPY --from=frontend-build /usr/local/bin/node /usr/local/bin/node
@@ -39,11 +40,9 @@ COPY --from=frontend-build /usr/local/bin/npm /usr/local/bin/npm
 COPY --from=frontend-build /usr/local/bin/npx /usr/local/bin/npx
 COPY --from=frontend-build /usr/local/lib/node_modules /usr/local/lib/node_modules
 
-# Copy built React app from frontend stage
-COPY --from=frontend-build /frontend/.next ./frontend/.next
-COPY --from=frontend-build /frontend/package.json ./frontend/package.json
-COPY --from=frontend-build /frontend/next.config.js ./frontend/next.config.js
-COPY --from=frontend-build /frontend/node_modules ./frontend/node_modules
+# Copy built Next.js app (standalone output expects server.js at project root)
+COPY --from=frontend-build /frontend/.next/standalone ./frontend
+COPY --from=frontend-build /frontend/.next/static ./frontend/.next/static
 
 # Create startup script
 COPY start-prod.sh .

@@ -32,6 +32,14 @@ class User(db.Model):
         passive_deletes=True
     )
 
+    imported_games = db.relationship(
+        'ImportedGame',
+        backref=db.backref('owner', passive_deletes=True),
+        lazy='dynamic',
+        cascade='all, delete-orphan',
+        passive_deletes=True
+    )
+
     def __init__(self, username, email, password, user_id=None):
         self.username = username.strip()
         self.email = email.strip().lower()
@@ -153,3 +161,35 @@ class Move(db.Model):
 
     def __repr__(self):
         return f'<Move {self.game_id}-{self.move_number}{self.color}: {self.algebraic_notation}>'
+
+
+class ImportedGame(db.Model):
+    """Store raw Chess.com import payloads"""
+    __tablename__ = 'imported_games'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(
+        db.String(20),
+        db.ForeignKey('users.user_id', ondelete='CASCADE'),
+        nullable=False,
+        index=True
+    )
+    chesscom_game_id = db.Column(db.String(32), nullable=False)
+    source_url = db.Column(db.String(512), nullable=False)
+    raw_payload = db.Column(db.Text, nullable=False)
+    imported_at = db.Column(db.DateTime, default=datetime.utcnow)
+    white_username = db.Column(db.String(100))
+    black_username = db.Column(db.String(100))
+    result_message = db.Column(db.String(255))
+    is_finished = db.Column(db.Boolean, default=False)
+    game_end_reason = db.Column(db.String(100))
+    end_time = db.Column(db.DateTime, nullable=True)
+    time_control = db.Column(db.String(50))
+    chesscom_uuid = db.Column(db.String(64))
+
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'chesscom_game_id', name='uq_imported_games_user_game'),
+    )
+
+    def __repr__(self):
+        return f'<ImportedGame {self.user_id}:{self.chesscom_game_id}>'

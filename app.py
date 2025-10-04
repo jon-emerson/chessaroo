@@ -8,12 +8,17 @@ from flask import Flask, jsonify, request, session
 from dotenv import load_dotenv
 from flask_cors import CORS
 from flask_migrate import Migrate
-from models import db, Game, Move, User
+from models import db, Game, Move, User, ImportedGame
 import chess
 import chess.pgn
 from io import StringIO
 from functools import wraps
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
+
+from helpers.chesscom_import import (
+    import_chesscom_game as import_chesscom_game_service,
+    ChessComImportError,
+)
 
 
 load_dotenv()
@@ -415,6 +420,50 @@ def create_app():
             'startingFen': game.starting_fen,
             'currentFen': game.get_current_fen(),
             'moves': moves_data
+        })
+
+    @app.route('/api/imported-games/chesscom', methods=['POST'])
+    @login_required
+    def import_chesscom_game():
+        """Import a Chess.com game payload and store it for the current user."""
+        user = get_current_user()
+        payload = request.get_json(silent=True) or {}
+        game_url = (payload.get('url') or payload.get('gameUrl') or '').strip()
+
+        try:
+            imported_game, summary = import_chesscom_game_service(user, game_url)
+        except ChessComImportError as exc:
+            return jsonify({'error': str(exc)}), exc.status_code
+
+        return jsonify({
+            'importedGameId': imported_game.id,
+            'chessComGameId': imported_game.chesscom_game_id,
+            'sourceUrl': imported_game.source_url,
+            'payloadSummary': summary,
+        }), 201
+
+    @app.route('/api/imported-games/<int:imported_game_id>', methods=['GET'])
+    @login_required
+    def get_imported_game(imported_game_id: int):
+        """Return details for a previously imported game."""
+        user = get_current_user()
+        imported_game = ImportedGame.query.filter_by(id=imported_game_id, user_id=user.user_id).first()
+        if not imported_game:
+            return jsonify({'error': 'Imported game not found'}), 404
+
+        return jsonify({
+            'id': imported_game.id,
+            'chessComGameId': imported_game.chesscom_game_id,
+            'sourceUrl': imported_game.source_url,
+            'whiteUsername': imported_game.white_username,
+            'blackUsername': imported_game.black_username,
+            'resultMessage': imported_game.result_message,
+            'isFinished': imported_game.is_finished,
+            'gameEndReason': imported_game.game_end_reason,
+            'endTime': imported_game.end_time.isoformat() if imported_game.end_time else None,
+            'timeControl': imported_game.time_control,
+            'importedAt': imported_game.imported_at.isoformat() if imported_game.imported_at else None,
+            'uuid': imported_game.chesscom_uuid,
         })
 
     @app.route('/api/create-sample-game')

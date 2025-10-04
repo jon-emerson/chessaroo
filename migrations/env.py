@@ -68,8 +68,14 @@ def run_migrations_offline():
         url=url, target_metadata=get_metadata(), literal_binds=True
     )
 
+    logger.info('Starting offline migrations using URL %s', url)
     with context.begin_transaction():
-        context.run_migrations()
+        try:
+            context.run_migrations()
+        except Exception:
+            logger.exception('Offline migrations failed')
+            raise
+    logger.info('Offline migrations finished successfully')
 
 
 def run_migrations_online():
@@ -103,8 +109,14 @@ def run_migrations_online():
             **conf_args
         )
 
+        logger.info('Starting online migrations against %s', connection.engine.url)
         with context.begin_transaction():
-            context.run_migrations()
+            try:
+                context.run_migrations()
+            except Exception:
+                logger.exception('Online migrations failed')
+                raise
+        logger.info('Online migrations finished successfully')
 
 
 if context.is_offline_mode():

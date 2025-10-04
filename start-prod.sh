@@ -4,4 +4,4 @@
 gunicorn --bind 0.0.0.0:8000 app:app &
 
 # Start Next.js frontend on port 3000 (ALB will route to this port)
-cd frontend && node .next/standalone/server.js
+cd frontend && node server.js

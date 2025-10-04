@@ -26,6 +26,7 @@ services:
       RUNNING_IN_CONTAINER: "1"
     ports:
       - "8000:8000"
+      - "3000:3000"
     depends_on:
       - postgres
     restart: unless-stopped
