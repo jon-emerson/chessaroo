@@ -113,6 +113,28 @@ export default function ImportedGamePage() {
           </div>
         </div>
       </div>
+
+      <div className="col-12">
+        <div className="card border-success mb-3">
+          <div className="card-body">
+            <h3 className="card-title">Analysis pipeline</h3>
+            <p className="card-text">
+              This import is queued for Chessaroo&apos;s mistake profiler. We examine the PGN for repeated
+              tactical themes and weak opening responses across all of your stored games, then surface
+              concise drills to prioritise in your next training block.
+            </p>
+            <ul className="mb-0">
+              <li>Identify tactics that repeatedly succeed against you (pins, skewers, forks, opposition).</li>
+              <li>Cluster your opening repertoires to highlight lines where you routinely choose suboptimal moves.</li>
+              <li>Recommend concrete alternative moves so you can rehearse better continuations.</li>
+            </ul>
+            <p className="mt-3 mb-0 text-muted" style={{ fontSize: '0.9rem' }}>
+              Insights appear on the dashboard once background analysis completes. Re-import a game any time
+              to refresh the data with your latest play.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
