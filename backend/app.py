@@ -34,8 +34,18 @@ def _ensure_container_runtime():
         return
     if os.environ.get('CI'):
         return
-    if os.path.exists('/.dockerenv') or os.environ.get('RUNNING_IN_CONTAINER') == '1':
+
+    # Detect Docker, Docker Compose, and AWS ECS/Fargate environments.
+    if os.path.exists('/.dockerenv'):
         return
+    if os.environ.get('RUNNING_IN_CONTAINER') == '1':
+        return
+    ecs_metadata_keys = ('ECS_CONTAINER_METADATA_URI', 'ECS_CONTAINER_METADATA_URI_V4')
+    if any(os.environ.get(key) for key in ecs_metadata_keys):
+        return
+    if os.environ.get('AWS_EXECUTION_ENV', '').startswith('AWS_ECS'):
+        return
+
     raise RuntimeError(
         'Chessaroo backend detected a non-container environment. Start services via '
         '`docker compose up` (or set ALLOW_NON_CONTAINER=1 if you intentionally bypass this check).'
