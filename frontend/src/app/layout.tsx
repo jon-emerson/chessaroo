@@ -1,8 +1,14 @@
 import type { Metadata } from 'next';
-import 'bootstrap/dist/css/bootstrap.min.css';
+import { Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '../contexts/AuthContext';
 import ClientLayout from './ClientLayout';
+
+const display = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  variable: '--font-display',
+  weight: ['400', '500', '600', '700'],
+});
 
 export const metadata: Metadata = {
   title: 'BlunderLab - Multiplayer Chess',
@@ -15,16 +21,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body>
+    <html lang="en" className="dark">
+      <body className={`${display.variable}`}>
         <AuthProvider>
           <ClientLayout>{children}</ClientLayout>
         </AuthProvider>
-
-        <script
-          src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
-          async
-        ></script>
       </body>
     </html>
   );

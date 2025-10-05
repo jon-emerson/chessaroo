@@ -7,5 +7,5 @@ bp = Blueprint('auth_logout', __name__)
 
 @bp.post('/api/auth/logout')
 def auth_logout():
-    session.clear()
-    return jsonify({'message': 'Logged out successfully'}), 200
+    session.pop('user_id', None)
+    return jsonify({'message': 'Logged out successfully from this session'}), 200

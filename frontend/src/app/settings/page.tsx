@@ -83,222 +83,158 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="row justify-content-center">
-      <div className="col-md-8">
-        <h2>⚙️ Account Settings</h2>
-        <p className="text-muted">Manage your account information and preferences</p>
-
-        {/* Account Information */}
-        <div className="card mb-4">
-          <div className="card-header">
-            <h5 className="mb-0">Account Information</h5>
-          </div>
-          <div className="card-body">
-            <div className="row">
-              <div className="col-md-6">
-                <p><strong>Account Created:</strong> {new Date(user.created_at).toLocaleDateString()}</p>
-              </div>
-              <div className="col-md-6">
-                <p><strong>Last Login:</strong> {new Date(user.last_login).toLocaleDateString()}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Profile Settings */}
-        <div className="card mb-4">
-          <div className="card-header">
-            <h5 className="mb-0">Profile Settings</h5>
-          </div>
-          <div className="card-body">
-            <div className="alert alert-info">
-              <small>
-                <strong>Note:</strong> Your username is how other users will see you in the application.
-                Your email address is kept private and used only for login.
-              </small>
-            </div>
-
-            {profileError && (
-              <div className="alert alert-danger" role="alert">
-                {profileError}
-              </div>
-            )}
-
-            {profileSuccess && (
-              <div className="alert alert-success" role="alert">
-                {profileSuccess}
-              </div>
-            )}
-
-            <form onSubmit={handleProfileUpdate}>
-              <div className="mb-3">
-                <label htmlFor="username" className="form-label">
-                  Username <span className="text-muted">(visible to other users)</span>
-                </label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  required
-                  disabled={profileLoading}
-                  minLength={3}
-                  maxLength={50}
-                />
-              </div>
-
-              <div className="mb-3">
-                <label htmlFor="email" className="form-label">
-                  Email Address <span className="text-muted">(private, for login only)</span>
-                </label>
-                <input
-                  type="email"
-                  className="form-control"
-                  id="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  disabled={profileLoading}
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="btn btn-primary"
-                disabled={profileLoading}
-              >
-                {profileLoading ? (
-                  <>
-                    <span
-                      className="spinner-border spinner-border-sm me-2"
-                      role="status"
-                      aria-hidden="true"
-                    ></span>
-                    Updating...
-                  </>
-                ) : (
-                  'Update Profile'
-                )}
-              </button>
-            </form>
-          </div>
-        </div>
-
-        {/* Change Password */}
-        <div className="card mb-4">
-          <div className="card-header">
-            <h5 className="mb-0">Change Password</h5>
-          </div>
-          <div className="card-body">
-            {passwordError && (
-              <div className="alert alert-danger" role="alert">
-                {passwordError}
-              </div>
-            )}
-
-            {passwordSuccess && (
-              <div className="alert alert-success" role="alert">
-                {passwordSuccess}
-              </div>
-            )}
-
-            <form onSubmit={handlePasswordChange}>
-              <div className="mb-3">
-                <label htmlFor="currentPassword" className="form-label">
-                  Current Password
-                </label>
-                <input
-                  type="password"
-                  className="form-control"
-                  id="currentPassword"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  required
-                  disabled={passwordLoading}
-                />
-              </div>
-
-              <div className="mb-3">
-                <label htmlFor="newPassword" className="form-label">
-                  New Password
-                </label>
-                <input
-                  type="password"
-                  className="form-control"
-                  id="newPassword"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  required
-                  disabled={passwordLoading}
-                  minLength={6}
-                />
-              </div>
-
-              <div className="mb-3">
-                <label htmlFor="confirmPassword" className="form-label">
-                  Confirm New Password
-                </label>
-                <input
-                  type="password"
-                  className="form-control"
-                  id="confirmPassword"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                  disabled={passwordLoading}
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="btn btn-warning"
-                disabled={passwordLoading}
-              >
-                {passwordLoading ? (
-                  <>
-                    <span
-                      className="spinner-border spinner-border-sm me-2"
-                      role="status"
-                      aria-hidden="true"
-                    ></span>
-                    Changing Password...
-                  </>
-                ) : (
-                  'Change Password'
-                )}
-              </button>
-            </form>
-          </div>
-        </div>
-
-        {/* Logout Section */}
-        <div className="card mb-4">
-          <div className="card-header">
-            <h5 className="mb-0">Session</h5>
-          </div>
-          <div className="card-body">
-            <p className="text-muted mb-3">
-              Log out of your account. You'll need to sign in again to access BlunderLab.
+    <div className="mx-auto grid max-w-4xl gap-8">
+      <header className="surface-card space-y-3">
+        <div className="grid gap-4 text-sm text-slate-300 sm:grid-cols-2">
+          <div className="rounded-2xl border border-slate-800/70 bg-slate-900/60 px-4 py-3">
+            <p className="text-xs uppercase tracking-wide text-slate-500">Account created</p>
+            <p className="mt-1 font-semibold text-white">
+              {new Date(user.created_at).toLocaleDateString()}
             </p>
-            <button
-              onClick={handleLogout}
-              className="btn btn-outline-danger"
-            >
-              Log Out
-            </button>
+          </div>
+          <div className="rounded-2xl border border-slate-800/70 bg-slate-900/60 px-4 py-3">
+            <p className="text-xs uppercase tracking-wide text-slate-500">Last login</p>
+            <p className="mt-1 font-semibold text-white">
+              {new Date(user.last_login).toLocaleString()}
+            </p>
           </div>
         </div>
+      </header>
 
-        {/* Back to Games */}
-        <div className="text-center">
-          <button
-            onClick={() => router.push('/')}
-            className="btn btn-outline-secondary"
-          >
-            ← Back to Games
-          </button>
+      <section className="surface-card space-y-6">
+        <div className="space-y-2">
+          <h3 className="text-xl font-semibold text-white">Profile settings</h3>
         </div>
+
+        {profileError && (
+          <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+            {profileError}
+          </div>
+        )}
+
+        {profileSuccess && (
+          <div className="rounded-2xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+            {profileSuccess}
+          </div>
+        )}
+
+        <form onSubmit={handleProfileUpdate} className="space-y-5">
+          <div className="space-y-2">
+            <label htmlFor="username" className="field-label">
+              Username (Public)
+            </label>
+            <input
+              type="text"
+              className="input-field"
+              id="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+              disabled={profileLoading}
+              minLength={3}
+              maxLength={50}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="email" className="field-label">
+              Email address (Private)
+            </label>
+            <input
+              type="email"
+              className="input-field"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              disabled={profileLoading}
+            />
+          </div>
+
+          <button type="submit" className="btn-primary w-full sm:w-auto" disabled={profileLoading}>
+            {profileLoading ? 'Updating profile…' : 'Update profile'}
+          </button>
+        </form>
+      </section>
+
+      <section className="surface-card space-y-6">
+        <div className="space-y-2">
+          <h3 className="text-xl font-semibold text-white">Change password</h3>
+        </div>
+
+        {passwordError && (
+          <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+            {passwordError}
+          </div>
+        )}
+
+        {passwordSuccess && (
+          <div className="rounded-2xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+            {passwordSuccess}
+          </div>
+        )}
+
+        <form onSubmit={handlePasswordChange} className="space-y-5">
+          <div className="space-y-2">
+            <label htmlFor="currentPassword" className="field-label">
+              Current password
+            </label>
+            <input
+              type="password"
+              className="input-field"
+              id="currentPassword"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              required
+              disabled={passwordLoading}
+            />
+          </div>
+
+          <div className="grid gap-5 sm:grid-cols-2">
+            <div className="space-y-2">
+              <label htmlFor="newPassword" className="field-label">
+                New password
+              </label>
+              <input
+                type="password"
+                className="input-field"
+                id="newPassword"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                required
+                disabled={passwordLoading}
+                minLength={6}
+              />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="confirmPassword" className="field-label">
+                Confirm new password
+              </label>
+              <input
+                type="password"
+                className="input-field"
+                id="confirmPassword"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                disabled={passwordLoading}
+              />
+            </div>
+          </div>
+
+          <button type="submit" className="btn-primary w-full sm:w-auto" disabled={passwordLoading}>
+            {passwordLoading ? 'Changing password…' : 'Change password'}
+          </button>
+        </form>
+      </section>
+
+      <div className="flex justify-end">
+        <button
+          onClick={handleLogout}
+          className="btn-secondary whitespace-nowrap border-rose-400/60 text-rose-200 hover:border-rose-300 hover:text-rose-100"
+        >
+          Log out on this device
+        </button>
       </div>
     </div>
   );

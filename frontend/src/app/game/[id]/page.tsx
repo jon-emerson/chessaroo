@@ -31,7 +31,7 @@ export default function GamePage() {
   const [gameData, setGameData] = useState<GameData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentMoveIndex, setCurrentMoveIndex] = useState(-1); // -1 = starting position
+  const [currentMoveIndex, setCurrentMoveIndex] = useState(-1);
   const [boardPosition, setBoardPosition] = useState<string>('');
   const [chess] = useState(new Chess());
   const [boardWidth, setBoardWidth] = useState(600);
@@ -43,18 +43,15 @@ export default function GamePage() {
   }, [gameId]);
 
   useEffect(() => {
-    // Set board width based on screen size
     const updateBoardWidth = () => {
-      setBoardWidth(Math.min(600, window.innerWidth - 50));
+      setBoardWidth(Math.min(600, window.innerWidth - 48));
     };
 
     updateBoardWidth();
     window.addEventListener('resize', updateBoardWidth);
-
     return () => window.removeEventListener('resize', updateBoardWidth);
   }, []);
 
-  // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       switch (event.key) {
@@ -74,12 +71,14 @@ export default function GamePage() {
           event.preventDefault();
           goToEnd();
           break;
+        default:
+          break;
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentMoveIndex, gameData]); // Dependencies to ensure functions have latest state
+  }, [currentMoveIndex, gameData]);
 
   const fetchGameData = async () => {
     try {
@@ -97,23 +96,10 @@ export default function GamePage() {
 
   const goToMove = (moveIndex: number) => {
     if (!gameData) return;
-
-    // Validate move index
-    if (moveIndex < -1 || moveIndex >= gameData.moves.length) {
-      return;
-    }
+    if (moveIndex < -1 || moveIndex >= gameData.moves.length) return;
 
     setCurrentMoveIndex(moveIndex);
-
-    let targetFen: string;
-    if (moveIndex === -1) {
-      // Starting position
-      targetFen = gameData.startingFen;
-    } else {
-      // Specific move
-      targetFen = gameData.moves[moveIndex].fen;
-    }
-
+    const targetFen = moveIndex === -1 ? gameData.startingFen : gameData.moves[moveIndex].fen;
     setBoardPosition(targetFen);
     chess.load(targetFen);
   };
@@ -130,9 +116,7 @@ export default function GamePage() {
     }
   };
 
-  const goToStart = () => {
-    goToMove(-1);
-  };
+  const goToStart = () => goToMove(-1);
 
   const goToEnd = () => {
     if (gameData) {
@@ -142,9 +126,10 @@ export default function GamePage() {
 
   if (loading) {
     return (
-      <div className="loading-spinner">
-        <div className="spinner-border" role="status">
-          <span className="visually-hidden">Loading...</span>
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <span className="h-12 w-12 animate-spin rounded-full border-2 border-slate-700/80 border-t-cyan-400" />
+          <p className="text-sm text-slate-400">Loading game state…</p>
         </div>
       </div>
     );
@@ -152,116 +137,108 @@ export default function GamePage() {
 
   if (error || !gameData) {
     return (
-      <div className="alert alert-danger">
-        <h4>Error</h4>
+      <div className="surface-card space-y-4 text-sm text-slate-300">
+        <h2 className="text-xl font-semibold text-white">Could not load this game</h2>
         <p>{error || 'Game not found'}</p>
-        <button onClick={() => router.push('/')} className="btn btn-primary">
-          ← Back to Games
+        <button onClick={() => router.push('/')} className="btn-secondary w-max">
+          ← Back to games
         </button>
       </div>
     );
   }
 
   return (
-    <div>
-      <div className="row mb-3">
-        <div className="col-12">
-          <button onClick={() => router.push('/')} className="btn btn-outline-secondary btn-sm">
-            ← Back to Games
-          </button>
-        </div>
-      </div>
+    <div className="space-y-8">
+      <button onClick={() => router.push('/')} className="btn-secondary">
+        ← Back to games
+      </button>
 
-      <div className="game-info">
-        <div className="row">
-          <div className="col-md-6">
-            <h2>{gameData.title}</h2>
-            <p>
-              <strong>Opponent:</strong> {gameData.opponentName || 'Anonymous'}
+      <section className="surface-card space-y-6">
+        <div className="grid gap-6 md:grid-cols-2">
+          <div>
+            <h2 className="text-2xl font-semibold text-white">{gameData.title}</h2>
+            <p className="mt-2 text-sm text-slate-300">
+              <span className="text-slate-400">Opponent:</span> {gameData.opponentName || 'Anonymous'}
             </p>
-            <p>
-              <strong>Playing as:</strong> {gameData.userColor === 'w' ? 'White' : 'Black'}
+            <p className="text-sm text-slate-300">
+              <span className="text-slate-400">Playing as:</span> {gameData.userColor === 'w' ? 'White' : 'Black'}
             </p>
           </div>
-          <div className="col-md-6 text-end">
-            <p>
-              <strong>Game ID:</strong> {gameData.gameId}
-            </p>
-            <p>
-              <strong>Moves:</strong> {gameData.moves.length}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className="row">
-        <div className="col-lg-8">
-          <div className="chess-board-container">
-            <Chessboard
-              position={boardPosition}
-              arePiecesDraggable={false}
-              boardWidth={boardWidth}
-            />
-          </div>
-
-          <div className="mt-3 text-center">
-            <button
-              onClick={goToPreviousMove}
-              className="btn btn-outline-primary btn-sm me-2"
-              disabled={currentMoveIndex <= -1}
-            >
-              ← Previous
-            </button>
-            <button onClick={goToStart} className="btn btn-outline-secondary btn-sm me-2">
-              Start
-            </button>
-            <button onClick={goToEnd} className="btn btn-outline-secondary btn-sm me-2">
-              End
-            </button>
-            <button
-              onClick={goToNextMove}
-              className="btn btn-outline-primary btn-sm"
-              disabled={currentMoveIndex >= gameData.moves.length - 1}
-            >
-              Next →
-            </button>
-          </div>
-        </div>
-
-        <div className="col-lg-4">
-          <h4>Moves</h4>
-          <div className="move-list">
-            <div
-              className={`move-item ${currentMoveIndex === -1 ? 'active' : ''}`}
-              onClick={() => goToMove(-1)}
-            >
-              <strong>Starting position</strong>
+          <div className="grid gap-3 text-sm text-slate-300 sm:grid-cols-2">
+            <div className="rounded-2xl border border-slate-800/60 bg-slate-900/60 px-4 py-3">
+              <p className="text-xs uppercase tracking-wide text-slate-500">Game ID</p>
+              <p className="mt-1 font-semibold text-white">{gameData.gameId}</p>
             </div>
-            {gameData.moves.map((move, index) => (
-              <div
-                key={index}
-                className={`move-item ${currentMoveIndex === index ? 'active' : ''}`}
-                onClick={() => goToMove(index)}
-              >
-                <strong>
-                  {move.moveNumber}
-                  {move.color === 'w' ? '.' : '...'}
-                </strong>{' '}
-                {move.algebraic}
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-3">
-            <h5>Current Position</h5>
-            <div className="card">
-              <div className="card-body">
-                <small className="font-monospace text-muted">{boardPosition}</small>
-              </div>
+            <div className="rounded-2xl border border-slate-800/60 bg-slate-900/60 px-4 py-3">
+              <p className="text-xs uppercase tracking-wide text-slate-500">Moves</p>
+              <p className="mt-1 font-semibold text-white">{gameData.moves.length}</p>
             </div>
           </div>
         </div>
-      </div>
+
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="space-y-6">
+            <div className="rounded-3xl border border-slate-800/70 bg-slate-900/70 p-4 shadow-lg">
+              <Chessboard
+                position={boardPosition}
+                boardOrientation={gameData.userColor === 'w' ? 'white' : 'black'}
+                arePiecesDraggable={false}
+                customDarkSquareStyle={{ backgroundColor: '#0f172a' }}
+                customLightSquareStyle={{ backgroundColor: '#1e293b' }}
+                animationDuration={150}
+                boardWidth={boardWidth}
+                customBoardStyle={{ borderRadius: '1.5rem', boxShadow: '0 30px 80px -40px rgba(15,23,42,0.9)' }}
+              />
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              <button onClick={goToStart} className="btn-secondary text-xs uppercase tracking-wide">
+                ⏮ Start
+              </button>
+              <button onClick={goToPreviousMove} className="btn-secondary text-xs uppercase tracking-wide">
+                ◀ Prev
+              </button>
+              <button onClick={goToNextMove} className="btn-secondary text-xs uppercase tracking-wide">
+                Next ▶
+              </button>
+              <button onClick={goToEnd} className="btn-secondary text-xs uppercase tracking-wide">
+                End ⏭
+              </button>
+            </div>
+          </div>
+
+          <aside className="flex flex-col gap-4">
+            <div className="rounded-2xl border border-slate-800/70 bg-slate-900/60 px-5 py-4">
+              <h3 className="text-lg font-semibold text-white">Move list</h3>
+              <p className="mt-1 text-xs text-slate-400">
+                Tip: Use ← and → to navigate. Home jumps to the start; End jumps to the final position.
+              </p>
+            </div>
+            <div className="flex-1 space-y-2 overflow-y-auto rounded-2xl border border-slate-800/70 bg-slate-900/60 p-4">
+              {gameData.moves.map((move, index) => {
+                const isActive = index === currentMoveIndex;
+                return (
+                  <button
+                    key={`${move.moveNumber}-${move.color}`}
+                    onClick={() => goToMove(index)}
+                    className={`flex w-full items-center justify-between rounded-xl px-4 py-2 text-sm transition ${
+                      isActive
+                        ? 'bg-cyan-500/15 text-cyan-200 shadow-glow'
+                        : 'bg-slate-900/80 text-slate-300 hover:bg-slate-800/80'
+                    }`}
+                  >
+                    <span className="font-medium text-white">
+                      {move.moveNumber}
+                      {move.color === 'w' ? '.' : '...'}
+                    </span>
+                    <span>{move.algebraic}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </aside>
+        </div>
+      </section>
     </div>
   );
 }

@@ -115,105 +115,103 @@ export default function HomeDashboardPage() {
   }
 
   return (
-    <div className="row">
-      <div className="col-12">
-        <h1>♕ BlunderLab</h1>
-        <p className="lead">Import Chess.com games and review your recent play</p>
-      </div>
-
-      <div className="col-12">
-        <div className="card mb-4">
-          <div className="card-body">
-            <h3 className="card-title">Import a Chess.com Game</h3>
-            <p className="card-text">
-              Paste a game link such as https://www.chess.com/game/live/143645010490. We store the raw
-              payload so the analysis engine can flag recurring tactical traps and vulnerable openings.
-            </p>
-            <form onSubmit={handleImport} className="row g-2">
-              <div className="col-md-9">
-                <input
-                  type="url"
-                  className="form-control"
-                  placeholder="https://www.chess.com/game/live/123456789"
-                  value={importUrl}
-                  onChange={(event) => setImportUrl(event.target.value)}
-                  disabled={importing}
-                  required
-                />
-              </div>
-              <div className="col-md-3 d-grid">
-                <button type="submit" className="btn btn-success" disabled={importing}>
-                  {importing ? 'Importing…' : 'Import Game'}
-                </button>
-              </div>
-            </form>
-            {importStatus && <div className="mt-2">{importStatus}</div>}
-          </div>
+    <div className="space-y-12">
+      <div className="flex flex-wrap items-center justify-between gap-6">
+        <div>
+          <span className="pill-muted">Game intelligence dashboard</span>
+          <h1 className="mt-3">Welcome back{user ? `, ${user.username}` : ''}</h1>
+          <p className="mt-3 max-w-2xl text-base text-slate-300">
+            Import a fresh game, detect repeatable mistakes in minutes, and launch a targeted training
+            sprint before your next pairing.
+          </p>
         </div>
+        <button onClick={createSampleGame} className="btn-secondary whitespace-nowrap">
+          Generate sample game
+        </button>
       </div>
 
-      <div className="col-12">
-        <h2>Recent Games</h2>
+      <section className="surface-card space-y-6">
+        <div className="space-y-2">
+          <h2 className="text-xl font-semibold text-white">Import a Chess.com game</h2>
+          <p className="text-sm text-slate-400">
+            Paste a game link such as https://www.chess.com/game/live/143645010490. We store the raw payload
+            so the analysis engine can flag recurring tactical traps and vulnerable openings.
+          </p>
+        </div>
+        <form onSubmit={handleImport} className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
+          <input
+            type="url"
+            className="input-field"
+            placeholder="https://www.chess.com/game/live/123456789"
+            value={importUrl}
+            onChange={(event) => setImportUrl(event.target.value)}
+            disabled={importing}
+            required
+          />
+          <button type="submit" className="btn-primary" disabled={importing}>
+            {importing ? 'Importing…' : 'Import game'}
+          </button>
+        </form>
+        {importStatus && <p className="text-sm text-slate-400">{importStatus}</p>}
+      </section>
+
+      <section className="space-y-6">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-xl font-semibold text-white">Recent games</h2>
+          <span className="pill-muted">Last 10 imports</span>
+        </div>
+
         {error && (
-          <div className="alert alert-danger" role="alert">
+          <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
             {error}
           </div>
         )}
+
         {games.length > 0 ? (
-          <div className="row">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {games.map((game) => (
-              <div key={game.id} className="col-md-4 mb-3">
-                <Link href={`/game/${game.id}`} className="text-decoration-none">
-                  <div className="card game-card h-100">
-                    <div className="card-body">
-                      <h5 className="card-title">{game.title}</h5>
-                      <p className="card-text">
-                        {game.user_color === 'w' ? (
-                          <span>
-                            <strong>{user?.username} (White)</strong> vs{' '}
-                            <strong>{game.opponent_name || 'Anonymous'}</strong>
-                          </span>
-                        ) : (
-                          <span>
-                            <strong>{game.opponent_name || 'Anonymous'}</strong> vs{' '}
-                            <strong>{user?.username} (Black)</strong>
-                          </span>
-                        )}
-                      </p>
-                      <div className="d-flex justify-content-between align-items-center">
-                        <small className="text-muted">
-                          {new Date(game.created_at).toLocaleDateString()}
-                        </small>
-                        <span
-                          className={`badge bg-${
-                            game.status === 'completed' ? 'success' : 'primary'
-                          }`}
-                        >
-                          {game.status}
-                        </span>
-                      </div>
-                      {game.result !== '*' && (
-                        <small className="text-muted">Result: {game.result}</small>
-                      )}
-                    </div>
+              <Link
+                key={game.id}
+                href={`/game/${game.id}`}
+                className="surface-card group flex h-full flex-col gap-4 transition hover:border-cyan-500/40 hover:shadow-glow"
+              >
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-xs uppercase tracking-wide text-slate-500">{game.status}</p>
+                    <h3 className="mt-1 text-lg font-semibold text-white">{game.title}</h3>
                   </div>
-                </Link>
-              </div>
+                  <span className="pill-muted">{new Date(game.created_at).toLocaleDateString()}</span>
+                </div>
+                <p className="text-sm text-slate-300">
+                  {game.user_color === 'w' ? (
+                    <span>
+                      <span className="text-white">{user?.username} (White)</span> vs{' '}
+                      <span className="text-white">{game.opponent_name || 'Anonymous'}</span>
+                    </span>
+                  ) : (
+                    <span>
+                      <span className="text-white">{game.opponent_name || 'Anonymous'}</span> vs{' '}
+                      <span className="text-white">{user?.username} (Black)</span>
+                    </span>
+                  )}
+                </p>
+                <div className="flex items-center justify-between text-xs text-slate-400">
+                  <span className="uppercase tracking-wide">Imported {new Date(game.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                  {game.result !== '*' && <span className="badge-soft-primary">Result {game.result}</span>}
+                </div>
+              </Link>
             ))}
           </div>
         ) : (
-          <div className="alert alert-info">
-            <h4>No games yet!</h4>
+          <div className="surface-card space-y-3 text-sm text-slate-300">
+            <h3 className="text-lg font-semibold text-white">No games imported yet</h3>
             <p>
-              Import a Chess.com game to start building your mistake library. We will track the tactical
-              patterns and opening branches that deserve focused practice.
+              Start by importing a game URL from Chess.com. We&apos;ll analyze it and surface the key tactics
+              to drill.
             </p>
-            <button onClick={createSampleGame} className="btn btn-primary">
-              Create Sample Game
-            </button>
           </div>
         )}
-      </div>
+      </section>
     </div>
   );
 }

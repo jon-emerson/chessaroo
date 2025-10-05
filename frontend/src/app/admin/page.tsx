@@ -30,7 +30,7 @@ export default function AdminPage() {
   useEffect(() => {
     const checkSession = async () => {
       try {
-        const status = await apiCall('/admin/status') as AdminStatus;
+        const status = (await apiCall('/admin/status')) as AdminStatus;
         setIsConfigured(Boolean(status.configured));
 
         if (status.configured && status.authenticated) {
@@ -94,19 +94,17 @@ export default function AdminPage() {
     if (!value) return '—';
     try {
       return new Date(value).toLocaleString();
-    } catch (e) {
+    } catch {
       return value;
     }
   };
 
   if (isLoading) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ height: '60vh' }}>
-        <div className="text-center">
-          <div className="spinner-border" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
-          <p className="mt-2">Checking admin session...</p>
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <span className="h-12 w-12 animate-spin rounded-full border-2 border-slate-700/80 border-t-cyan-400" />
+          <p className="text-sm text-slate-400">Checking admin session…</p>
         </div>
       </div>
     );
@@ -114,27 +112,23 @@ export default function AdminPage() {
 
   if (isConfigured === false) {
     return (
-      <div className="row justify-content-center">
-        <div className="col-md-6">
-          <div className="alert alert-warning">
-            <h3 className="alert-heading">Admin disabled</h3>
-            <p className="mb-2">
-              The admin master password is not configured. Set the `ADMIN_MASTER_PASSWORD` environment
-              variable (or `ADMIN_MASTER_PASSWORD_DEV` for development) and redeploy to enable this page.
-            </p>
-            <p className="mb-0 text-muted" style={{ fontSize: '0.9rem' }}>
-              This safeguard prevents exposing admin endpoints without authentication. Update your
-              deployment secrets and reload the page once configured.
-            </p>
-          </div>
-        </div>
+      <div className="surface-card space-y-4 text-sm text-slate-300">
+        <h3 className="text-xl font-semibold text-white">Admin disabled</h3>
+        <p>
+          The admin master password is not configured. Set the <code className="rounded bg-slate-900/70 px-1.5 py-0.5">ADMIN_MASTER_PASSWORD</code>
+          environment variable (or <code className="rounded bg-slate-900/70 px-1.5 py-0.5">ADMIN_MASTER_PASSWORD_DEV</code> for development) and redeploy to enable this
+          page.
+        </p>
+        <p className="text-slate-400">
+          This safeguard prevents exposing admin endpoints without authentication. Update your deployment secrets and reload once configured.
+        </p>
       </div>
     );
   }
 
   if (statusError) {
     return (
-      <div className="alert alert-danger" role="alert">
+      <div className="surface-card border border-rose-500/40 bg-rose-500/10 px-4 py-4 text-sm text-rose-200">
         {statusError}
       </div>
     );
@@ -142,75 +136,82 @@ export default function AdminPage() {
 
   if (!isAuthenticated) {
     return (
-      <div className="row justify-content-center">
-        <div className="col-md-6">
-          <div className="card">
-            <div className="card-body">
-              <h3 className="card-title mb-3">Admin</h3>
-              <form onSubmit={handleLogin}>
-                <div className="mb-3">
-                  <input
-                    id="admin-password"
-                    type="password"
-                    className="form-control"
-                    value={password}
-                    onChange={(event) => setPassword(event.target.value)}
-                    placeholder="Password"
-                    disabled={isSubmitting}
-                  />
-                </div>
-                {error && <div className="alert alert-danger">{error}</div>}
-                <button type="submit" className="btn btn-dark w-100" disabled={isSubmitting}>
-                  {isSubmitting ? 'Authenticating...' : 'Login'}
-                </button>
-              </form>
-            </div>
+      <div className="mx-auto max-w-md">
+        <div className="surface-card space-y-6">
+          <div className="text-center">
+            <h3 className="text-xl font-semibold text-white">Admin login</h3>
+            <p className="mt-2 text-sm text-slate-400">
+              Enter the master password to view account insights. This password is never shared with regular users.
+            </p>
           </div>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <input
+              id="admin-password"
+              type="password"
+              className="input-field"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              placeholder="Master password"
+              disabled={isSubmitting}
+            />
+            {error && (
+              <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+                {error}
+              </div>
+            )}
+            <button type="submit" className="btn-primary w-full" disabled={isSubmitting}>
+              {isSubmitting ? 'Authenticating…' : 'Login'}
+            </button>
+          </form>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="card">
-      <div className="card-header d-flex justify-content-between align-items-center">
-        <h3 className="card-title mb-0">Users</h3>
-        <button className="btn btn-outline-secondary btn-sm" onClick={handleLogout}>
+    <section className="surface-card space-y-6">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h3 className="text-2xl font-semibold text-white">Users</h3>
+          <p className="text-sm text-slate-400">This view is only available to administrators with the master password.</p>
+        </div>
+        <button className="btn-secondary" onClick={handleLogout}>
           Logout
         </button>
-      </div>
-      <div className="card-body">
-        {users.length === 0 ? (
-          <div className="alert alert-info mb-0">No users found in the database.</div>
-        ) : (
-          <div className="table-responsive">
-            <table className="table table-striped table-hover align-middle">
-              <thead className="table-dark">
-                <tr>
-                  <th scope="col">User ID</th>
-                  <th scope="col">Username</th>
-                  <th scope="col">Email</th>
-                  <th scope="col">Created</th>
-                  <th scope="col">Last Updated</th>
-                  <th scope="col">Last Login</th>
+      </header>
+
+      {users.length === 0 ? (
+        <div className="rounded-2xl border border-slate-800/70 bg-slate-900/60 px-4 py-3 text-sm text-slate-300">
+          No users found in the database.
+        </div>
+      ) : (
+        <div className="overflow-x-auto rounded-2xl border border-slate-800/70">
+          <table className="min-w-full divide-y divide-slate-800/70 text-left text-sm text-slate-300">
+            <thead className="bg-slate-900/80 text-xs uppercase tracking-wide text-slate-400">
+              <tr>
+                <th className="px-4 py-3">User ID</th>
+                <th className="px-4 py-3">Username</th>
+                <th className="px-4 py-3">Email</th>
+                <th className="px-4 py-3">Created</th>
+                <th className="px-4 py-3">Last Updated</th>
+                <th className="px-4 py-3">Last Login</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-800/60">
+              {users.map((user) => (
+                <tr key={user.user_id} className="hover:bg-slate-900/70">
+                  <td className="px-4 py-3 font-mono text-xs text-slate-400">{user.user_id}</td>
+                  <td className="px-4 py-3 text-white">{user.username}</td>
+                  <td className="px-4 py-3 text-slate-300">{user.email}</td>
+                  <td className="px-4 py-3">{formatDate(user.created_at)}</td>
+                  <td className="px-4 py-3">{formatDate(user.updated_at)}</td>
+                  <td className="px-4 py-3">{formatDate(user.last_login)}</td>
                 </tr>
-              </thead>
-              <tbody>
-                {users.map((user) => (
-                  <tr key={user.user_id}>
-                    <td><code>{user.user_id}</code></td>
-                    <td>{user.username}</td>
-                    <td>{user.email}</td>
-                    <td>{formatDate(user.created_at)}</td>
-                    <td>{formatDate(user.updated_at)}</td>
-                    <td>{formatDate(user.last_login)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-    </div>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
   );
 }

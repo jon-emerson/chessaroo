@@ -48,9 +48,10 @@ export default function ImportedGamePage() {
 
   if (loading) {
     return (
-      <div className="loading-spinner">
-        <div className="spinner-border" role="status">
-          <span className="visually-hidden">Loading...</span>
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <span className="h-12 w-12 animate-spin rounded-full border-2 border-slate-700/80 border-t-cyan-400" />
+          <p className="text-sm text-slate-400">Retrieving import details…</p>
         </div>
       </div>
     );
@@ -58,83 +59,112 @@ export default function ImportedGamePage() {
 
   if (error || !details) {
     return (
-      <div className="alert alert-danger">
-        <h4>Import Not Found</h4>
+      <div className="surface-card space-y-4 text-sm text-slate-300">
+        <h2 className="text-xl font-semibold text-white">Import not found</h2>
         <p>{error || 'We could not find that imported game.'}</p>
-        <button onClick={() => router.push('/')} className="btn btn-primary">
-          ← Back to Dashboard
+        <button onClick={() => router.push('/home')} className="btn-secondary w-max">
+          ← Back to dashboard
         </button>
       </div>
     );
   }
 
   return (
-    <div className="row">
-      <div className="col-12 mb-3">
-        <button onClick={() => router.push('/')} className="btn btn-outline-secondary btn-sm">
-          ← Back to Dashboard
-        </button>
-      </div>
+    <div className="space-y-8">
+      <button onClick={() => router.push('/home')} className="btn-secondary">
+        ← Back to dashboard
+      </button>
 
-      <div className="col-12">
-        <h1>Imported Chess.com Game</h1>
-        <p className="text-muted">Chess.com Game ID: {details.chessComGameId}</p>
-      </div>
+      <section className="surface-card space-y-8">
+        <header className="space-y-2">
+          <span className="pill-muted">Imported game</span>
+          <h1 className="text-3xl font-semibold text-white">Chess.com import #{details.chessComGameId}</h1>
+          <p className="text-sm text-slate-400">
+            We keep the raw PGN so the mistake profiler can benchmark this game against your entire archive.
+          </p>
+        </header>
 
-      <div className="col-lg-6">
-        <div className="card mb-3">
-          <div className="card-body">
-            <h4 className="card-title">Players</h4>
-            <p><strong>White:</strong> {details.whiteUsername || 'Unknown'}</p>
-            <p><strong>Black:</strong> {details.blackUsername || 'Unknown'}</p>
-            <p><strong>Result:</strong> {details.resultMessage || 'Pending'}</p>
-            <p><strong>Status:</strong> {details.isFinished ? 'Finished' : 'In Progress'}</p>
-            {details.gameEndReason && (
-              <p><strong>Game End Reason:</strong> {details.gameEndReason}</p>
-            )}
+        <div className="grid gap-6 lg:grid-cols-2">
+          <div className="surface-card bg-slate-900/70 p-6">
+            <h3 className="text-lg font-semibold text-white">Players</h3>
+            <dl className="mt-4 space-y-2 text-sm text-slate-300">
+              <div className="flex items-center justify-between">
+                <dt className="text-slate-400">White</dt>
+                <dd className="font-medium text-white">{details.whiteUsername || 'Unknown'}</dd>
+              </div>
+              <div className="flex items-center justify-between">
+                <dt className="text-slate-400">Black</dt>
+                <dd className="font-medium text-white">{details.blackUsername || 'Unknown'}</dd>
+              </div>
+              <div className="flex items-center justify-between">
+                <dt className="text-slate-400">Result</dt>
+                <dd className="badge-soft-primary">
+                  {details.resultMessage || (details.isFinished ? 'Completed' : 'Pending')}
+                </dd>
+              </div>
+              {details.gameEndReason && (
+                <div className="flex items-center justify-between">
+                  <dt className="text-slate-400">End reason</dt>
+                  <dd>{details.gameEndReason}</dd>
+                </div>
+              )}
+            </dl>
+          </div>
+
+          <div className="surface-card bg-slate-900/70 p-6">
+            <h3 className="text-lg font-semibold text-white">Metadata</h3>
+            <dl className="mt-4 space-y-2 text-sm text-slate-300">
+              <div className="flex items-center justify-between">
+                <dt className="text-slate-400">Imported</dt>
+                <dd>{details.importedAt ? new Date(details.importedAt).toLocaleString() : '—'}</dd>
+              </div>
+              <div className="flex items-center justify-between">
+                <dt className="text-slate-400">Finished</dt>
+                <dd>{details.endTime ? new Date(details.endTime).toLocaleString() : '—'}</dd>
+              </div>
+              <div className="flex items-center justify-between">
+                <dt className="text-slate-400">Time control</dt>
+                <dd>{details.timeControl || '—'}</dd>
+              </div>
+              <div className="flex items-center justify-between">
+                <dt className="text-slate-400">Chess.com UUID</dt>
+                <dd>{details.uuid || '—'}</dd>
+              </div>
+              <div className="flex items-center justify-between">
+                <dt className="text-slate-400">Source</dt>
+                <dd>
+                  <a
+                    href={details.sourceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-cyan-300 hover:text-cyan-200"
+                  >
+                    View on Chess.com
+                  </a>
+                </dd>
+              </div>
+            </dl>
           </div>
         </div>
-      </div>
 
-      <div className="col-lg-6">
-        <div className="card mb-3">
-          <div className="card-body">
-            <h4 className="card-title">Metadata</h4>
-            <p><strong>Imported At:</strong> {details.importedAt ? new Date(details.importedAt).toLocaleString() : '—'}</p>
-            <p><strong>End Time:</strong> {details.endTime ? new Date(details.endTime).toLocaleString() : '—'}</p>
-            <p><strong>Time Control:</strong> {details.timeControl || '—'}</p>
-            <p><strong>Chess.com UUID:</strong> {details.uuid || '—'}</p>
-            <p>
-              <strong>Source URL:</strong>{' '}
-              <a href={details.sourceUrl} target="_blank" rel="noopener noreferrer">
-                View on Chess.com
-              </a>
-            </p>
-          </div>
+        <div className="surface-card-xl space-y-4 bg-slate-900/70">
+          <h3 className="text-xl font-semibold text-white">Analysis pipeline</h3>
+          <p className="text-sm text-slate-300">
+            This import is queued for BlunderLab&apos;s mistake profiler. We examine the PGN for repeated
+            tactical themes and weak opening responses across all of your stored games, then surface concise
+            drills to prioritise in your next training block.
+          </p>
+          <ul className="list-disc space-y-2 pl-5 text-sm text-slate-300">
+            <li>Fingerprint tactical traps that succeed against you—pins, skewers, forks, opposition squeezes.</li>
+            <li>Cluster openings to highlight move numbers where your score collapses compared to masters.</li>
+            <li>Recommend concrete alternative lines and prep a drill pack sized for a five-day sprint.</li>
+          </ul>
+          <p className="text-sm text-slate-400">
+            Insights appear on your dashboard once background analysis completes. Re-import a game any time to
+            refresh the metrics with your latest play.
+          </p>
         </div>
-      </div>
-
-      <div className="col-12">
-        <div className="card border-success mb-3">
-          <div className="card-body">
-            <h3 className="card-title">Analysis pipeline</h3>
-            <p className="card-text">
-              This import is queued for BlunderLab&apos;s mistake profiler. We examine the PGN for repeated
-              tactical themes and weak opening responses across all of your stored games, then surface
-              concise drills to prioritise in your next training block.
-            </p>
-            <ul className="mb-0">
-              <li>Identify tactics that repeatedly succeed against you (pins, skewers, forks, opposition).</li>
-              <li>Cluster your opening repertoires to highlight lines where you routinely choose suboptimal moves.</li>
-              <li>Recommend concrete alternative moves so you can rehearse better continuations.</li>
-            </ul>
-            <p className="mt-3 mb-0 text-muted" style={{ fontSize: '0.9rem' }}>
-              Insights appear on the dashboard once background analysis completes. Re-import a game any time
-              to refresh the data with your latest play.
-            </p>
-          </div>
-        </div>
-      </div>
+      </section>
     </div>
   );
 }
