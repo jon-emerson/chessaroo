@@ -12,21 +12,37 @@ interface AdminUser {
   last_login: string | null;
 }
 
+interface AdminStatus {
+  configured: boolean;
+  authenticated: boolean;
+}
+
 export default function AdminPage() {
   const [password, setPassword] = useState('');
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isConfigured, setIsConfigured] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [statusError, setStatusError] = useState<string | null>(null);
 
   useEffect(() => {
     const checkSession = async () => {
       try {
-        const data = await apiCall('/api/admin/users');
-        setUsers(data.users || []);
-        setIsAuthenticated(true);
-      } catch (err) {
+        const status = await apiCall('/api/admin/status') as AdminStatus;
+        setIsConfigured(Boolean(status.configured));
+
+        if (status.configured && status.authenticated) {
+          const data = await apiCall('/api/admin/users');
+          setUsers(data.users || []);
+          setIsAuthenticated(true);
+        } else {
+          setIsAuthenticated(false);
+        }
+      } catch (err: any) {
+        const message = err?.message || 'Unable to load admin status';
+        setStatusError(message);
         setIsAuthenticated(false);
       } finally {
         setIsLoading(false);
@@ -54,6 +70,7 @@ export default function AdminPage() {
       const data = await apiCall('/api/admin/users');
       setUsers(data.users || []);
       setIsAuthenticated(true);
+      setIsConfigured(true);
       setPassword('');
     } catch (err: any) {
       setError(err?.message || 'Failed to authenticate');
@@ -91,6 +108,34 @@ export default function AdminPage() {
           </div>
           <p className="mt-2">Checking admin session...</p>
         </div>
+      </div>
+    );
+  }
+
+  if (isConfigured === false) {
+    return (
+      <div className="row justify-content-center">
+        <div className="col-md-6">
+          <div className="alert alert-warning">
+            <h3 className="alert-heading">Admin disabled</h3>
+            <p className="mb-2">
+              The admin master password is not configured. Set the `ADMIN_MASTER_PASSWORD` environment
+              variable (or `ADMIN_MASTER_PASSWORD_DEV` for development) and redeploy to enable this page.
+            </p>
+            <p className="mb-0 text-muted" style={{ fontSize: '0.9rem' }}>
+              This safeguard prevents exposing admin endpoints without authentication. Update your
+              deployment secrets and reload the page once configured.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (statusError) {
+    return (
+      <div className="alert alert-danger" role="alert">
+        {statusError}
       </div>
     );
   }

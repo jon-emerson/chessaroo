@@ -26,6 +26,7 @@ load_dotenv('.env.local', override=True)
 
 
 PT_ZONE = ZoneInfo('America/Los_Angeles')
+CONTAINER_GUARD_EXIT_CODE = 72
 
 
 def _ensure_container_runtime():
@@ -46,10 +47,12 @@ def _ensure_container_runtime():
     if os.environ.get('AWS_EXECUTION_ENV', '').startswith('AWS_ECS'):
         return
 
-    raise RuntimeError(
+    message = (
         'Chessaroo backend detected a non-container environment. Start services via '
         '`docker compose up` (or set ALLOW_NON_CONTAINER=1 if you intentionally bypass this check).'
     )
+    sys.stderr.write(message + '\n')
+    raise SystemExit(CONTAINER_GUARD_EXIT_CODE)
 
 
 migrate = Migrate()
@@ -550,6 +553,18 @@ def create_app():
         """Clear admin authentication state."""
         response = jsonify({'message': 'Admin logged out'})
         return clear_admin_cookie(response)
+
+    @app.route('/api/admin/status', methods=['GET'])
+    def admin_status():
+        """Surface admin configuration state and current authentication status."""
+        configured = bool(get_admin_password())
+        if not configured:
+            return jsonify({'configured': False, 'authenticated': False})
+
+        return jsonify({
+            'configured': True,
+            'authenticated': admin_authenticated(),
+        })
 
     @app.route('/api/admin/users', methods=['GET'])
     def admin_list_users():

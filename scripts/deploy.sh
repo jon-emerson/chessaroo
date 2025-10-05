@@ -149,7 +149,12 @@ STOP_REASON=$(python3 -c 'import json,sys; data=json.loads(sys.stdin.read()); ta
 CONTAINER_REASON=$(python3 -c 'import json,sys; data=json.loads(sys.stdin.read()); tasks=data.get("tasks", []); containers=tasks[0].get("containers", []) if tasks else []; print(containers[0].get("reason", "")) if containers else print("")' <<< "$TASK_DETAILS")
 
 if [ "$EXIT_CODE" != "0" ]; then
-    echo "❌ Migration task failed (exit code $EXIT_CODE)"
+    if [ "$EXIT_CODE" = "72" ]; then
+        echo "🛑 Migration container exited early because the runtime guard rejected a non-container environment."
+        echo "   Ensure the task has Docker/ECS metadata available or set ALLOW_NON_CONTAINER=1 if you intentionally bypass the guard."
+    else
+        echo "❌ Migration task failed (exit code $EXIT_CODE)"
+    fi
     [ -n "$STOP_REASON" ] && echo "   Task stop reason: $STOP_REASON"
     [ -n "$CONTAINER_REASON" ] && echo "   Container reason: $CONTAINER_REASON"
     exit 1
@@ -170,7 +175,7 @@ fi
 
 echo ""
 echo "✅ Deployment complete!"
-if [ -n "$ALB_URL" ]; then
-    echo "🌐 Your app will be available at: $ALB_URL"
+if [ -n "$ALB_URL" ] && [[ "$ALB_URL" != *"***"* ]]; then
+    echo "🌐 Load balancer endpoint: $ALB_URL"
 fi
 echo "⏳ It may take a few minutes for the new version to be available."
