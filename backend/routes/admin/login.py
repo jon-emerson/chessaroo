@@ -1,4 +1,4 @@
-"""POST /admin/login"""
+"""Authenticate an admin via POST /admin/login using the master password and set the session cookie."""
 
 import hmac
 

@@ -1,4 +1,4 @@
-"""GET /admin/status"""
+"""Report admin configuration and authentication state through GET /admin/status."""
 
 from flask import jsonify
 

@@ -1,4 +1,4 @@
-"""GET /api/auth/me"""
+"""Return the authenticated user's profile snapshot for GET /api/auth/me."""
 
 from flask import Blueprint, jsonify
 

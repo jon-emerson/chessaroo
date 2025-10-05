@@ -1,4 +1,4 @@
-"""GET /api/imported-games/<id>"""
+"""Fetch the stored details for a specific imported game via GET /api/imported-games/<id>."""
 
 from flask import Blueprint, jsonify
 

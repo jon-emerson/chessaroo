@@ -1,4 +1,4 @@
-"""Route blueprints for the BlunderLab backend."""
+"""Aggregate every BlunderLab API blueprint and register them on the Flask app."""
 
 from . import (
     deployment_info,

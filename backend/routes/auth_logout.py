@@ -1,4 +1,4 @@
-"""POST /api/auth/logout"""
+"""Clear the current session with POST /api/auth/logout so the user is signed out."""
 
 from flask import Blueprint, jsonify, session
 

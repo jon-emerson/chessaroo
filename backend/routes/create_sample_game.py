@@ -1,4 +1,4 @@
-"""GET /api/create-sample-game"""
+"""Seed a demo chess match for the user when they call GET /api/create-sample-game."""
 
 from flask import Blueprint, jsonify
 

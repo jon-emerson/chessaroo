@@ -1,4 +1,4 @@
-"""GET /admin/users"""
+"""Expose a paginated user list for admins reviewing accounts via GET /admin/users."""
 
 from flask import jsonify
 

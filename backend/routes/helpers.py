@@ -1,4 +1,4 @@
-"""Shared helpers and decorators for backend routes."""
+"""Authentication helpers and decorators shared across the BlunderLab API routes."""
 
 from datetime import datetime
 from functools import wraps

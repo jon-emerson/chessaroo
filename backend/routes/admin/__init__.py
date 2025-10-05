@@ -1,4 +1,4 @@
-"""Admin blueprint composed of individual admin routes."""
+"""Assemble the admin blueprint and register its login, logout, status, and user routes."""
 
 from flask import Blueprint
 

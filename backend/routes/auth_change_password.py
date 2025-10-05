@@ -1,4 +1,4 @@
-"""PUT /api/auth/change-password"""
+"""Allow a logged-in user to update their password via PUT /api/auth/change-password."""
 
 from flask import Blueprint, jsonify, request
 from werkzeug.security import generate_password_hash

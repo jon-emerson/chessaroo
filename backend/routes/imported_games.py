@@ -1,4 +1,4 @@
-"""POST /api/imported-games"""
+"""Import a Chess.com game for the user when POST /api/imported-games is called."""
 
 from flask import Blueprint, jsonify, request
 

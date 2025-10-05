@@ -1,4 +1,4 @@
-"""GET /api/games"""
+"""Serve a quick list of the user's recent games through GET /api/games."""
 
 from flask import Blueprint, jsonify
 

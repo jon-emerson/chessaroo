@@ -1,4 +1,4 @@
-"""POST /api/auth/register"""
+"""Create a new account and start a session through POST /api/auth/register."""
 
 from flask import Blueprint, jsonify, request, session, current_app
 

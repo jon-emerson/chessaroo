@@ -1,4 +1,4 @@
-"""POST /api/auth/login"""
+"""Authenticate a user with POST /api/auth/login and establish a session on success."""
 
 from datetime import datetime
 

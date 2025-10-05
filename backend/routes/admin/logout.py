@@ -1,4 +1,4 @@
-"""POST /admin/logout"""
+"""Sign an admin out by clearing the cookie on POST /admin/logout."""
 
 from flask import jsonify
 

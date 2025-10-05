@@ -1,4 +1,4 @@
-"""PUT /api/auth/update-profile"""
+"""Let authenticated users update their profile details via PUT /api/auth/update-profile."""
 
 from flask import Blueprint, jsonify, request
 

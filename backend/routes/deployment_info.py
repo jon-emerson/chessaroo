@@ -1,4 +1,4 @@
-"""GET /api/deployment-info"""
+"""Expose deployment metadata for GET /api/deployment-info so the UI can display build times."""
 
 from datetime import datetime
 

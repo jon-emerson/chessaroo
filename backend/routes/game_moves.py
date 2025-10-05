@@ -1,4 +1,4 @@
-"""GET /api/game/<game_id>/moves"""
+"""Return move-by-move details for one of the user's games via GET /api/game/<game_id>/moves."""
 
 from flask import Blueprint, jsonify
 
