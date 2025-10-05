@@ -90,7 +90,7 @@
         "iam:ListPolicyVersions",
         "iam:ListPolicies",
         "ec2:DescribeDhcpOptions",
-        "ec2:DescribeNetworkAcls"
+        "ec2:DescribeNetworkAcls",
         "ecs:DescribeTaskDefinition",
         "ecs:ListClusters",
         "ecs:ListServices",
