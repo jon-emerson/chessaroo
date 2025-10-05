@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useAuth } from '../../contexts/AuthContext';
 
 export default function LoginPage() {
-  const [username, setUsername] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -19,7 +19,7 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      await login(username, password);
+      await login(identifier, password);
       router.push('/home');
     } catch (err: any) {
       setError(err.message || 'Login failed');
@@ -44,24 +44,23 @@ export default function LoginPage() {
 
             <form onSubmit={handleSubmit}>
               <div className="mb-3">
-                <label htmlFor="username" className="form-label">
-                  Username
+                <label htmlFor="identifier" className="form-label">
+                  Username or Email
                 </label>
                 <input
                   type="text"
                   className="form-control"
-                  id="username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  id="identifier"
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
                   required
                   disabled={isLoading}
                   autoComplete="username"
                   inputMode="text"
                   autoCapitalize="none"
                   spellCheck={false}
-                  pattern="^[^@\s]+$"
-                  title="Username cannot contain spaces or @"
                 />
+                <div className="form-text">Use your Chessaroo username or the email on your account.</div>
               </div>
 
               <div className="mb-3">

@@ -12,21 +12,26 @@ bp = Blueprint('auth_login', __name__)
 @bp.post('/api/auth/login')
 def auth_login():
     data = request.get_json() or {}
-    username = (data.get('username') or '').strip()
-    password = data.get('password', '')
+    identifier = (data.get('identifier') or data.get('username') or '').strip()
+    password = (data.get('password') or '').strip()
 
-    if not username or not password:
-        return jsonify({'error': 'Username and password are required'}), 400
+    if not identifier or not password:
+        return jsonify({'error': 'Username or email and password are required'}), 400
 
-    user = User.query.filter_by(username=username).first()
+    identifier_email = identifier.lower()
+    user = (
+        User.query.filter((User.username == identifier) | (User.email == identifier_email))
+        .first()
+    )
+
     if not user or not user.check_password(password):
-        return jsonify({'error': 'Invalid username or password'}), 401
+        return jsonify({'error': 'Invalid username/email or password'}), 401
 
     try:
         user.last_login = datetime.utcnow()
         session['user_id'] = user.user_id
-        current_app.logger.info("User %s logged in", username)
+        current_app.logger.info("User %s logged in", user.username)
         return jsonify({'message': 'Login successful', 'user': user.to_dict()}), 200
     except Exception as exc:  # pylint: disable=broad-except
-        current_app.logger.error("Login failed for %s: %s", username, exc, exc_info=True)
+        current_app.logger.error("Login failed for %s: %s", user.username, exc, exc_info=True)
         return jsonify({'error': 'Login failed'}), 500
