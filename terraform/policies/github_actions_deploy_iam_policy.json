@@ -40,6 +40,35 @@
       ]
     },
     {
+      "Sid": "TerraformStateBucket",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:DeleteObject"
+      ],
+      "Resource": "arn:aws:s3:::blunderlab-tf-state/*"
+    },
+    {
+      "Sid": "TerraformStateBucketList",
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket"
+      ],
+      "Resource": "arn:aws:s3:::blunderlab-tf-state"
+    },
+    {
+      "Sid": "TerraformStateLockTable",
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:GetItem",
+        "dynamodb:PutItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:DescribeTable"
+      ],
+      "Resource": "arn:aws:dynamodb:us-west-2:599704544000:table/blunderlab-tf-locks"
+    },
+    {
       "Sid": "ECSDescribeTaskDefinition",
       "Effect": "Allow",
       "Action": [
