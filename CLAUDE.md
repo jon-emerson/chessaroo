@@ -60,7 +60,11 @@ docker compose exec backend flask db upgrade
 - Frontend properly handles last login display in Account Settings (`frontend/src/app/settings/page.tsx:102`)
 - Database migrations are versioned under `migrations/versions/`
 
-## Instructions for vibe coding agents like Claude Code, OpenAI Codex, Cursor
+## Claude Development Guidelines for BlunderLab
 
-- Never run git commit without explicit user approval. The user will decide when we've written enough code at a sufficient level of quality to git commit. This will prevent all sorts of crap being committed, like that time you wanted us to sync GitHub Actions settings repository secrets to AWS Secrets Manager because your recommendation to use GitHub Actions settings repository secrets was just plain wrong. You almost committed that, it's a good thing I stopped you.
+- You may stage files, but **do not run `git commit` or `git push` unless the user explicitly asks for it.**
+
+## BlunderLab Repo Rules
+
+⚠️  Absolute rule: never run `git commit`, `git commit --amend`, `git push`, or `git push --force` unless the user explicitly asks for it.
 
