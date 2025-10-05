@@ -20,7 +20,7 @@ export default function LoginPage() {
 
     try {
       await login(username, password);
-      router.push('/');
+      router.push('/home');
     } catch (err: any) {
       setError(err.message || 'Login failed');
     } finally {
