@@ -21,7 +21,8 @@
         "ecr:TagResource",
         "ecr:UntagResource",
         "ecr:SetRepositoryPolicy",
-        "ecr:GetRepositoryPolicy"
+        "ecr:GetRepositoryPolicy",
+        "ecr:ListTagsForResource"
       ],
       "Resource": [
         "arn:aws:ecr:us-west-2:599704544000:repository/blunderlab-tf"
@@ -65,12 +66,16 @@
         "iam:ListAttachedRolePolicies",
         "iam:ListRolePolicies",
         "iam:GetRolePolicy",
+        "iam:ListRoleTags",
         "secretsmanager:DescribeSecret",
         "secretsmanager:GetSecretValue",
+        "secretsmanager:GetResourcePolicy",
         "logs:DescribeLogGroups",
         "logs:DescribeLogStreams",
+        "logs:ListTagsForResource",
         "ec2:DescribeAvailabilityZones",
         "ec2:DescribeVpcs",
+        "ec2:DescribeVpcAttribute",
         "ec2:DescribeSubnets",
         "ec2:DescribeRouteTables",
         "ec2:DescribeInternetGateways",
@@ -80,6 +85,12 @@
         "elasticloadbalancing:DescribeTargetGroups",
         "elasticloadbalancing:DescribeListeners",
         "elasticloadbalancing:DescribeTags",
+        "iam:GetPolicy",
+        "iam:GetPolicyVersion",
+        "iam:ListPolicyVersions",
+        "iam:ListPolicies",
+        "ec2:DescribeDhcpOptions",
+        "ec2:DescribeNetworkAcls"
         "ecs:DescribeTaskDefinition",
         "ecs:ListClusters",
         "ecs:ListServices",
