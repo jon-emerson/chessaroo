@@ -32,14 +32,14 @@ BlunderLab is a web application that imports Chess.com games so players can capt
 - Docker installed locally
 - Git for version control
 
-### Quick Deploy
-```bash
-# Setup AWS infrastructure
-./scripts/setup.sh
+### Quick Deploy (CI/CD First)
+1. Run `./scripts/setup.sh` once per environment to create/validate the Terraform remote state backend (S3 + DynamoDB) and apply the infrastructure.
+2. Commit your changes and push to `main`. The `Deploy to Production` GitHub Actions workflow will build the container, push to ECR, run migrations, and roll ECS.
 
-# Deploy application
-./scripts/deploy.sh
-```
+> Need an emergency/manual deploy? `./scripts/deploy.sh` still works locally, but the canonical path is the GitHub Actions workflow.
+
+### Terraform Remote State Bootstrap
+`./scripts/setup.sh` makes sure the Terraform backend exists before it touches any infrastructure. It creates (or reuses) the S3 bucket `blunderlab-tf-state` and DynamoDB table `blunderlab-tf-locks`, enables encryption/versioning, and then runs `terraform init/plan/apply`. Override the defaults with `TF_STATE_BUCKET` or `TF_STATE_LOCK_TABLE` if you need different names.
 
 ### Development
 ```bash
@@ -74,7 +74,7 @@ python3 -m flask db upgrade
 - Run `python3 -m flask db stamp 0993f449f98a` once in existing environments before the first Alembic upgrade if the tables already exist.
 
 ### Continuous Deployment (GitHub Actions)
-Pushes to `main` now execute `.github/workflows/deploy.yml`, which is split into two coordinated jobs:
+Pushes to `main` execute `.github/workflows/deploy.yml`, which is split into two coordinated jobs:
 - **`terraform` job** – runs `terraform fmt`, `init`, `validate`, and `plan` against the remote backend (`s3://blunderlab-tf-state` with DynamoDB locking). On `main` it performs `terraform apply` and publishes the ECR repository, ECS cluster/service names, and ALB URL as job outputs.
 - **`deploy` job** – consumes those outputs, builds the Docker image, pushes to ECR, runs database migrations through a one-off ECS task, and forces a new service deployment.
 
