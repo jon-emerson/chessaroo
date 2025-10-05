@@ -18,6 +18,7 @@
         "ecr:DeleteRepository",
         "ecr:PutLifecyclePolicy",
         "ecr:DeleteLifecyclePolicy",
+        "ecr:GetLifecyclePolicy",
         "ecr:TagResource",
         "ecr:UntagResource",
         "ecr:SetRepositoryPolicy",
@@ -85,6 +86,8 @@
         "elasticloadbalancing:DescribeTargetGroups",
         "elasticloadbalancing:DescribeListeners",
         "elasticloadbalancing:DescribeTags",
+        "elasticloadbalancing:DescribeLoadBalancerAttributes",
+        "elasticloadbalancing:DescribeTargetGroupAttributes",
         "iam:GetPolicy",
         "iam:GetPolicyVersion",
         "iam:ListPolicyVersions",
@@ -98,7 +101,8 @@
         "application-autoscaling:DescribeScalableTargets",
         "application-autoscaling:DescribeScalingPolicies",
         "rds:DescribeDBInstances",
-        "rds:DescribeDBSubnetGroups"
+        "rds:DescribeDBSubnetGroups",
+        "rds:ListTagsForResource"
       ],
       "Resource": "*"
     },
