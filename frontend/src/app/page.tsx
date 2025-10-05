@@ -52,7 +52,7 @@ export default function HomePage() {
 
     setImporting(true);
     try {
-      const response = await apiCall('/api/imported-games/chesscom', {
+      const response = await apiCall('/api/imported-games', {
         method: 'POST',
         body: JSON.stringify({ url: importUrl.trim() }),
       });

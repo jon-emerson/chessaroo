@@ -30,11 +30,11 @@ export default function AdminPage() {
   useEffect(() => {
     const checkSession = async () => {
       try {
-        const status = await apiCall('/api/admin/status') as AdminStatus;
+        const status = await apiCall('/admin/status') as AdminStatus;
         setIsConfigured(Boolean(status.configured));
 
         if (status.configured && status.authenticated) {
-          const data = await apiCall('/api/admin/users');
+          const data = await apiCall('/admin/users');
           setUsers(data.users || []);
           setIsAuthenticated(true);
         } else {
@@ -63,11 +63,11 @@ export default function AdminPage() {
 
     setIsSubmitting(true);
     try {
-      await apiCall('/api/admin/login', {
+      await apiCall('/admin/login', {
         method: 'POST',
         body: JSON.stringify({ password }),
       });
-      const data = await apiCall('/api/admin/users');
+      const data = await apiCall('/admin/users');
       setUsers(data.users || []);
       setIsAuthenticated(true);
       setIsConfigured(true);
@@ -81,7 +81,7 @@ export default function AdminPage() {
 
   const handleLogout = async () => {
     try {
-      await apiCall('/api/admin/logout', { method: 'POST' });
+      await apiCall('/admin/logout', { method: 'POST' });
     } catch (err) {
       // Ignore errors on logout
     } finally {
