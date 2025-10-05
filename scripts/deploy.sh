@@ -56,7 +56,7 @@ echo "📤 Pushing image to ECR..."
 docker push $ECR_URI:latest
 
 # Run database migrations inside the VPC using a one-off ECS task
-echo "🗄️ Running database migrations on ECS..."
+echo "🗄️ Starting database migration task on ECS..."
 SERVICE_DESC=$(aws ecs describe-services --cluster "$CLUSTER_NAME" --services "$SERVICE_NAME" --region "$AWS_REGION")
 
 if [ -z "$SERVICE_DESC" ]; then
@@ -115,6 +115,7 @@ PY
 )
 unset CONTAINER_NAME
 
+echo "   • Launching one-off task from $TASK_DEF_ARN"
 RUN_TASK_OUTPUT=$(aws ecs run-task \
     --cluster "$CLUSTER_NAME" \
     --launch-type FARGATE \
@@ -128,7 +129,7 @@ RUN_TASK_OUTPUT=$(aws ecs run-task \
 FAILURE_COUNT=$(python3 -c 'import json,sys; data=json.loads(sys.stdin.read()); print(len(data.get("failures", [])))' <<< "$RUN_TASK_OUTPUT")
 
 if [ "$FAILURE_COUNT" != "0" ]; then
-    python3 -c 'import json,sys; data=json.loads(sys.stdin.read()); fail=data.get("failures", []); [print(f"❌ Migration task failure: {item.get(\"reason\", \"unknown\")} ({item.get(\"arn\", \"no-arn\")})") for item in fail]' <<< "$RUN_TASK_OUTPUT"
+    python3 -c 'import json,sys; data=json.loads(sys.stdin.read()); fail=data.get("failures", []); [print(f"❌ Migration task request failed before start: {item.get(\"reason\", \"unknown\")} ({item.get(\"arn\", \"no-arn\")})") for item in fail]' <<< "$RUN_TASK_OUTPUT"
     exit 1
 fi
 
@@ -139,7 +140,7 @@ if [ -z "$TASK_ARN" ]; then
     exit 1
 fi
 
-echo "⏳ Waiting for migration task to finish..."
+echo "⏳ Waiting for migration task ($TASK_ARN) to finish..."
 aws ecs wait tasks-stopped --cluster "$CLUSTER_NAME" --tasks "$TASK_ARN" --region "$AWS_REGION"
 
 TASK_DETAILS=$(aws ecs describe-tasks --cluster "$CLUSTER_NAME" --tasks "$TASK_ARN" --region "$AWS_REGION")
@@ -150,8 +151,10 @@ CONTAINER_REASON=$(python3 -c 'import json,sys; data=json.loads(sys.stdin.read()
 
 if [ "$EXIT_CODE" != "0" ]; then
     if [ "$EXIT_CODE" = "72" ]; then
-        echo "🛑 Migration container exited early because the runtime guard rejected a non-container environment."
-        echo "   Ensure the task has Docker/ECS metadata available or set ALLOW_NON_CONTAINER=1 if you intentionally bypass the guard."
+        echo "🛑 Migration container exited because the runtime guard rejected a non-container environment."
+        echo "   Ensure the task has ECS metadata available or set ALLOW_NON_CONTAINER=1 only if you intentionally bypass the guard."
+    elif [ "$EXIT_CODE" = "2" ]; then
+        echo "🛑 Migration container exited with code 2 — likely an import or application startup failure before Alembic ran."
     else
         echo "❌ Migration task failed (exit code $EXIT_CODE)"
     fi
