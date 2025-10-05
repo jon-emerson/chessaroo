@@ -28,7 +28,7 @@ export default function LandingPage() {
   return (
     <div className="row">
       <div className="col-12 text-center">
-        <h1>♕ Welcome to Chessaroo</h1>
+        <h1>♕ Welcome to BlunderLab</h1>
         <p className="lead">
           Import your Chess.com games, surface the patterns behind your losses, and get actionable study
           prompts for the tactics that repeatedly catch you off guard.
@@ -50,7 +50,7 @@ export default function LandingPage() {
               <div className="card-body">
                 <h4 className="card-title">Recurring Tactical Mistakes</h4>
                 <p className="card-text">
-                  Chessaroo scans your imported games for repeat offenders—pins, skewers, forks, and
+                  BlunderLab scans your imported games for repeat offenders—pins, skewers, forks, and
                   opposition blunders—so you can drill the exact pattern that keeps costing rating points.
                 </p>
               </div>

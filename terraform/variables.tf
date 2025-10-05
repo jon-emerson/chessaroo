@@ -1,7 +1,7 @@
 variable "project_name" {
   description = "Name of the project"
   type        = string
-  default     = "chessaroo-tf"
+  default     = "blunderlab-tf"
 }
 
 variable "environment" {
@@ -50,13 +50,13 @@ variable "ecs_desired_count" {
 variable "db_name" {
   description = "Name of the PostgreSQL database"
   type        = string
-  default     = "chessaroo"
+  default     = "blunderlab"
 }
 
 variable "db_username" {
   description = "Username for the PostgreSQL database"
   type        = string
-  default     = "chessaroo_user"
+  default     = "blunderlab_user"
 }
 
 variable "db_instance_class" {

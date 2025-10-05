@@ -1,13 +1,13 @@
-version: '3.8'
+name: blunderlab
 
 services:
   postgres:
     image: postgres:15
-    container_name: chessaroo-postgres
+    container_name: blunderlab-postgres
     environment:
-      POSTGRES_DB: chessaroo
-      POSTGRES_USER: chessaroo_user
-      POSTGRES_PASSWORD: chessaroo_pass
+      POSTGRES_DB: blunderlab
+      POSTGRES_USER: blunderlab_user
+      POSTGRES_PASSWORD: blunderlab_pass
     ports:
       - "5432:5432"
     volumes:
@@ -15,10 +15,12 @@ services:
     restart: unless-stopped
 
   backend:
-    build: .
-    container_name: chessaroo-backend
+    build:
+      context: .
+    container_name: blunderlab-backend
+    image: blunderlab-backend:latest
     environment:
-      DATABASE_URL: postgresql://chessaroo_user:chessaroo_pass@postgres:5432/chessaroo
+      DATABASE_URL: postgresql://blunderlab_user:blunderlab_pass@postgres:5432/blunderlab
       SECRET_KEY: dev-secret-key-change-in-production
       APP_ENV: ${APP_ENV:-development}
       ADMIN_MASTER_PASSWORD_DEV: ${ADMIN_MASTER_PASSWORD_DEV:?admin dev password required}

@@ -1,4 +1,4 @@
-# Claude Development Guidelines for Chessaroo
+# Claude Development Guidelines for BlunderLab
 
 ## Port Configuration
 

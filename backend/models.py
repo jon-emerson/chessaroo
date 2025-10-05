@@ -1,5 +1,5 @@
 """
-Database models for Chessaroo chess application
+Database models for BlunderLab chess application
 """
 import os
 import secrets

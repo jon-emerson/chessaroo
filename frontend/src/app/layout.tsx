@@ -5,7 +5,7 @@ import { AuthProvider } from '../contexts/AuthContext';
 import ClientLayout from './ClientLayout';
 
 export const metadata: Metadata = {
-  title: 'Chessaroo - Multiplayer Chess',
+  title: 'BlunderLab - Multiplayer Chess',
   description: 'A multiplayer chess application with real-time collaboration',
 };
 

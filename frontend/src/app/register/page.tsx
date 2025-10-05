@@ -51,7 +51,7 @@ export default function RegisterPage() {
       <div className="col-md-6 col-lg-4">
         <div className="card">
           <div className="card-header">
-            <h3 className="text-center mb-0">♕ Join Chessaroo</h3>
+            <h3 className="text-center mb-0">♕ Join BlunderLab</h3>
           </div>
           <div className="card-body">
             {error && (

@@ -6,6 +6,14 @@ terraform {
       version = "~> 5.0"
     }
   }
+
+  backend "s3" {
+    bucket         = "blunderlab-tf-state"
+    key            = "global/terraform.tfstate"
+    region         = "us-west-2"
+    dynamodb_table = "blunderlab-tf-locks"
+    encrypt        = true
+  }
 }
 
 provider "aws" {

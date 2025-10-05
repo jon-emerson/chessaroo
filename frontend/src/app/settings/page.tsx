@@ -279,7 +279,7 @@ export default function SettingsPage() {
           </div>
           <div className="card-body">
             <p className="text-muted mb-3">
-              Log out of your account. You'll need to sign in again to access Chessaroo.
+              Log out of your account. You'll need to sign in again to access BlunderLab.
             </p>
             <button
               onClick={handleLogout}

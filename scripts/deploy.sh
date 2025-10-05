@@ -32,7 +32,7 @@ else
 fi
 
 AWS_REGION=${AWS_REGION:-$(aws configure get region 2>/dev/null || echo "us-west-2")}
-PROJECT_NAME="chessaroo"
+PROJECT_NAME="blunderlab"
 
 echo "ECR Repository: $ECR_URI"
 echo "ECS Cluster: $CLUSTER_NAME"

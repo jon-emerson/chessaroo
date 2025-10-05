@@ -71,11 +71,16 @@ resource "aws_iam_role_policy" "ecs_secrets_policy" {
           "secretsmanager:GetSecretValue"
         ]
         Resource = [
-          aws_secretsmanager_secret.db_credentials.arn
+          aws_secretsmanager_secret.db_credentials.arn,
+          data.aws_secretsmanager_secret.admin_master_password.arn
         ]
       }
     ]
   })
+}
+
+data "aws_secretsmanager_secret" "admin_master_password" {
+  name = "blunderlab/admin_master_password"
 }
 
 # CloudWatch Log Group
@@ -133,6 +138,10 @@ resource "aws_ecs_task_definition" "app" {
         {
           name      = "DATABASE_URL"
           valueFrom = "${aws_secretsmanager_secret.db_credentials.arn}:DATABASE_URL::"
+        },
+        {
+          name      = "ADMIN_MASTER_PASSWORD"
+          valueFrom = data.aws_secretsmanager_secret.admin_master_password.arn
         }
       ]
 

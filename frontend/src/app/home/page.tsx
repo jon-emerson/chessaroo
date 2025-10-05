@@ -117,7 +117,7 @@ export default function HomeDashboardPage() {
   return (
     <div className="row">
       <div className="col-12">
-        <h1>♕ Chessaroo</h1>
+        <h1>♕ BlunderLab</h1>
         <p className="lead">Import Chess.com games and review your recent play</p>
       </div>
 

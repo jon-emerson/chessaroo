@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Terraform Destroy Script for Chessaroo
+# Terraform Destroy Script for BlunderLab
 # WARNING: This will destroy ALL infrastructure created by Terraform
 
 set -e

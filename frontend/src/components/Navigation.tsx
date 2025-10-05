@@ -13,7 +13,7 @@ export default function Navigation() {
     <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
       <div className="container">
         <Link className="navbar-brand" href="/">
-          ♕ Chessaroo
+          ♕ BlunderLab
         </Link>
 
         <div className="navbar-nav ms-auto">

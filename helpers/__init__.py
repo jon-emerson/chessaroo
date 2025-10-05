@@ -1,1 +1,1 @@
-"""Service layer modules for Chessaroo."""
+"""Service layer modules for BlunderLab."""

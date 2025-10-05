@@ -33,7 +33,7 @@ export default function LoginPage() {
       <div className="col-md-6 col-lg-4">
         <div className="card">
           <div className="card-header">
-            <h3 className="text-center mb-0">♕ Login to Chessaroo</h3>
+            <h3 className="text-center mb-0">♕ Login to BlunderLab</h3>
           </div>
           <div className="card-body">
             {error && (
@@ -60,7 +60,7 @@ export default function LoginPage() {
                   autoCapitalize="none"
                   spellCheck={false}
                 />
-                <div className="form-text">Use your Chessaroo username or the email on your account.</div>
+                <div className="form-text">Use your BlunderLab username or the email on your account.</div>
               </div>
 
               <div className="mb-3">

@@ -1,4 +1,4 @@
-"""Route blueprints for the Chessaroo backend."""
+"""Route blueprints for the BlunderLab backend."""
 
 from . import (
     deployment_info,

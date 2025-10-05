@@ -30,7 +30,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
             <div className="spinner-border" role="status">
               <span className="visually-hidden">Loading...</span>
             </div>
-            <p className="mt-2">Loading Chessaroo...</p>
+            <p className="mt-2">Loading BlunderLab...</p>
           </div>
         </div>
         <Footer />

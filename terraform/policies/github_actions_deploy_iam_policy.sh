@@ -3,7 +3,7 @@
 # Create the policy
 aws iam create-policy \
   --policy-name GitHubActionsDeployPolicy \
-  --policy-document file://iam-policy.json
+  --policy-document file://github_actions_deploy_iam_policy.json
 
 # Create the user
 aws iam create-user --user-name github-actions-deploy

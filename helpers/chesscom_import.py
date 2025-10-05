@@ -43,7 +43,7 @@ def fetch_chesscom_payload(game_id: str) -> Tuple[str, Dict[str, Any]]:
     """Retrieve the raw and parsed game payload from Chess.com."""
     api_url = f'https://www.chess.com/callback/live/game/{game_id}'
     headers = {
-        'User-Agent': 'Chessaroo/1.0 (https://github.com/jon-emerson/chessaroo)',
+        'User-Agent': 'BlunderLab/1.0 (https://github.com/jon-emerson/blunderlab)',
         'Accept': 'application/json'
     }
 

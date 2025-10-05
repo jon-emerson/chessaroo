@@ -1,6 +1,6 @@
-# Chessaroo
+# BlunderLab
 
-Chessaroo is a web application that imports Chess.com games so players can capture, review, and critique their play with richer metadata than the source site provides.
+BlunderLab is a web application that imports Chess.com games so players can capture, review, and critique their play with richer metadata than the source site provides.
 
 ## 🏗️ Architecture
 
@@ -74,22 +74,26 @@ python3 -m flask db upgrade
 - Run `python3 -m flask db stamp 0993f449f98a` once in existing environments before the first Alembic upgrade if the tables already exist.
 
 ### Continuous Deployment (GitHub Actions)
-Every push to `main` triggers `.github/workflows/deploy.yml`, which builds the Docker image, pushes to ECR, runs migrations, and forces a new ECS deployment. Configure these GitHub repository secrets before enabling the workflow:
+Pushes to `main` now execute `.github/workflows/deploy.yml`, which is split into two coordinated jobs:
+- **`terraform` job** – runs `terraform fmt`, `init`, `validate`, and `plan` against the remote backend (`s3://blunderlab-tf-state` with DynamoDB locking). On `main` it performs `terraform apply` and publishes the ECR repository, ECS cluster/service names, and ALB URL as job outputs.
+- **`deploy` job** – consumes those outputs, builds the Docker image, pushes to ECR, runs database migrations through a one-off ECS task, and forces a new service deployment.
+
+Configure these GitHub repository secrets before enabling the workflow:
 
 | Secret | Description |
 | --- | --- |
-| `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | Credentials for the GitHub Actions deploy user |
+| `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | Credentials for the GitHub Actions deploy user (must have access to S3 state bucket, DynamoDB locks, ECR, ECS, RDS, CloudWatch, and Secrets Manager) |
 | `AWS_REGION` | AWS region (e.g. `us-west-2`) |
-| `ECR_REPOSITORY_URL` | Full repository URI (`1234567890.dkr.ecr.us-west-2.amazonaws.com/chessaroo-tf`) |
-| `ECS_CLUSTER_NAME` | Name of the ECS cluster |
-| `ECS_SERVICE_NAME` | Name of the ECS service |
-| `LOAD_BALANCER_URL` *(optional)* | Production URL to print after deploy |
+| `ECR_REPOSITORY_URL` *(optional fallback)* | Only used if Terraform outputs are unavailable |
+| `ECS_CLUSTER_NAME` *(optional fallback)* | Only used if Terraform outputs are unavailable |
+| `ECS_SERVICE_NAME` *(optional fallback)* | Only used if Terraform outputs are unavailable |
+| `LOAD_BALANCER_URL` *(optional fallback)* | Printed at the end of deploy if provided |
 
-The IAM policy and setup helper scripts live under `terraform/policies/`.
+The IAM policy and bootstrap helper scripts live under `terraform/policies/`. Ensure the S3 bucket `blunderlab-tf-state` and DynamoDB table `blunderlab-tf-locks` exist before enabling the workflow, or adjust the backend block in `terraform/main.tf` if you use different names.
 
 ## 🌐 Live Application
 
-- **URL**: http://chessaroo-tf-alb-1489853278.us-west-2.elb.amazonaws.com (runs on port 3000)
+- **URL**: http://blunderlab-tf-alb-1489853278.us-west-2.elb.amazonaws.com (runs on port 3000)
 - **Focus**: Dashboard for importing Chess.com games, quick links back to saved critiques, and metadata summaries for each import
 - **Backend Services**: Flask API for authentication, Chess.com ingestion, and database-backed storage
 - **Note**: To deploy the latest changes, run `./scripts/deploy.sh`
@@ -97,7 +101,7 @@ The IAM policy and setup helper scripts live under `terraform/policies/`.
 ## 📂 Project Structure
 
 ```
-chessaroo/
+blunderlab/
 ├── backend/                 # Flask backend package
 │   ├── __init__.py          # Package marker
 │   ├── app.py               # Flask application factory and routes

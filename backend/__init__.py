@@ -1,4 +1,4 @@
-"""Flask backend package for Chessaroo."""
+"""Flask backend package for BlunderLab."""
 
 from .app import create_app
 

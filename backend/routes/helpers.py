@@ -39,7 +39,7 @@ def get_admin_password() -> Optional[str]:
 
 def get_admin_serializer() -> URLSafeTimedSerializer:
     secret = current_app.config['SECRET_KEY']
-    salt = 'chessaroo-admin-cookie'
+    salt = 'blunderlab-admin-cookie'
     return URLSafeTimedSerializer(secret_key=secret, salt=salt)
 
 

@@ -8,7 +8,7 @@ resource "random_password" "db_password" {
 # AWS Secrets Manager secret for database credentials
 resource "aws_secretsmanager_secret" "db_credentials" {
   name        = "${local.name}-db-credentials"
-  description = "Database credentials for Chessaroo PostgreSQL"
+  description = "Database credentials for BlunderLab PostgreSQL"
 
   tags = local.common_tags
 }

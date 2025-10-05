@@ -39,7 +39,7 @@ def _ensure_container_runtime():
         return
 
     message = (
-        'Chessaroo backend detected a non-container environment. Start services via '
+        'BlunderLab backend detected a non-container environment. Start services via '
         '`docker compose up` (or set ALLOW_NON_CONTAINER=1 if you intentionally bypass this check).'
     )
     sys.stderr.write(message + '\n')
@@ -55,7 +55,7 @@ def _configure_logging(app: Flask) -> None:
         stream=sys.stdout,
     )
     app.logger.setLevel(logging.INFO)
-    app.logger.info('Chessaroo application startup')
+    app.logger.info('BlunderLab application startup')
 
 
 def _configure_database(app: Flask) -> None:
@@ -63,9 +63,9 @@ def _configure_database(app: Flask) -> None:
     if not database_url:
         db_host = os.environ.get('DB_HOST', '127.0.0.1')
         db_port = os.environ.get('DB_PORT', '5432')
-        db_name = os.environ.get('DB_NAME', 'chessaroo')
-        db_user = os.environ.get('DB_USER', 'chessaroo_user')
-        db_password = os.environ.get('DB_PASSWORD', 'chessaroo_pass')
+        db_name = os.environ.get('DB_NAME', 'blunderlab')
+        db_user = os.environ.get('DB_USER', 'blunderlab_user')
+        db_password = os.environ.get('DB_PASSWORD', 'blunderlab_pass')
         database_url = f'postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}'
 
     app.config['SQLALCHEMY_DATABASE_URI'] = database_url
@@ -114,7 +114,7 @@ def create_app():
     app.config['ADMIN_MASTER_PASSWORD'] = os.environ.get('ADMIN_MASTER_PASSWORD')
     app.config['ADMIN_MASTER_PASSWORD_DEV'] = os.environ.get('ADMIN_MASTER_PASSWORD_DEV')
     app.config.setdefault('ADMIN_SESSION_MAX_AGE', int(os.environ.get('ADMIN_SESSION_MAX_AGE', '3600')))
-    app.config.setdefault('ADMIN_SESSION_COOKIE_NAME', os.environ.get('ADMIN_SESSION_COOKIE_NAME', 'chessaroo_admin_session'))
+    app.config.setdefault('ADMIN_SESSION_COOKIE_NAME', os.environ.get('ADMIN_SESSION_COOKIE_NAME', 'blunderlab_admin_session'))
     app.config['DEPLOYMENT_TIME'] = DEPLOYMENT_TIME
 
     _configure_database(app)

@@ -1,10 +1,10 @@
-# Chessaroo Database Migrations
+# BlunderLab Database Migrations
 
-This directory contains database migration scripts for the Chessaroo application.
+This directory contains database migration scripts for the BlunderLab application.
 
 ## Migration System
 
-Chessaroo now uses Alembic via Flask-Migrate. Manual one-off scripts are retired in favour of versioned revisions tracked in this directory.
+BlunderLab now uses Alembic via Flask-Migrate. Manual one-off scripts are retired in favour of versioned revisions tracked in this directory.
 
 ### Current revisions
 

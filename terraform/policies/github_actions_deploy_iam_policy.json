@@ -15,7 +15,7 @@
         "ecr:PutImage"
       ],
       "Resource": [
-        "arn:aws:ecr:us-west-2:599704544000:repository/chessaroo-tf"
+        "arn:aws:ecr:us-west-2:599704544000:repository/blunderlab-tf"
       ]
     },
     {
@@ -35,8 +35,8 @@
         "ecs:RegisterTaskDefinition"
       ],
       "Resource": [
-        "arn:aws:ecs:us-west-2:599704544000:service/chessaroo-tf-cluster/chessaroo-tf-service",
-        "arn:aws:ecs:us-west-2:599704544000:task-definition/chessaroo-tf:*"
+        "arn:aws:ecs:us-west-2:599704544000:service/blunderlab-tf-cluster/blunderlab-tf-service",
+        "arn:aws:ecs:us-west-2:599704544000:task-definition/blunderlab-tf:*"
       ]
     },
     {
@@ -53,7 +53,7 @@
       "Action": [
         "ecs:RunTask"
       ],
-      "Resource": "arn:aws:ecs:us-west-2:599704544000:task-definition/chessaroo-tf:*"
+      "Resource": "arn:aws:ecs:us-west-2:599704544000:task-definition/blunderlab-tf:*"
     },
     {
       "Sid": "ECSDescribeTasks",
@@ -70,7 +70,7 @@
         "iam:PassRole"
       ],
       "Resource": [
-        "arn:aws:iam::599704544000:role/chessaroo-tf-ecs-task-execution-role"
+        "arn:aws:iam::599704544000:role/blunderlab-tf-ecs-task-execution-role"
       ]
     }
   ]

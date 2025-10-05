@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# Terraform AWS Setup Script for Chessaroo
+# Terraform AWS Setup Script for BlunderLab
 # This script will deploy AWS infrastructure using Terraform
 
 set -e
 
-echo "🚀 Setting up AWS for Chessaroo deployment with Terraform"
+echo "🚀 Setting up AWS for BlunderLab deployment with Terraform"
 echo "========================================================"
 
 # Check if AWS CLI is configured

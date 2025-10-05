@@ -119,7 +119,7 @@ export default function ImportedGamePage() {
           <div className="card-body">
             <h3 className="card-title">Analysis pipeline</h3>
             <p className="card-text">
-              This import is queued for Chessaroo&apos;s mistake profiler. We examine the PGN for repeated
+              This import is queued for BlunderLab&apos;s mistake profiler. We examine the PGN for repeated
               tactical themes and weak opening responses across all of your stored games, then surface
               concise drills to prioritise in your next training block.
             </p>
